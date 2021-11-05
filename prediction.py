@@ -1,6 +1,9 @@
 import numpy as np
-
-dna_bases = ["A", "C", "G", "T", "N"]
+import csv
+import math
+import random
+from scipy.stats import bernoulli
+import torch
 
 """
 There are four computational stages, in order:
@@ -10,10 +13,16 @@ There are four computational stages, in order:
 4. neural network
 """
 
+nummotif = 16  # number of motifs to discover
+bases = 'ACGT'  # DNA bases
+basesRNA = 'ACGU'  # RNA bases
+batch_size = 64  # fixed batch size -> see notes to problem about it
+dictReverse = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N'}  # dictionary to implement reverse-complement mode
+reverse_mode = False
 
-def score(sequence):
-    # f(s) = network(pooling(rectification(convolution(s, M), b)), weights)
-    pass
+
+def score(sequence, M, b, weights):
+    return network(pooling(rectification(convolution(sequence, M), b)), weights)
 
 
 # Convolution stage
@@ -74,5 +83,5 @@ def pooling(Y):
 
 # Neural Network stage
 # W represents the weights
-def network():
+def network(z, W):
     pass
