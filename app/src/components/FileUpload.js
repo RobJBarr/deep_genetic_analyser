@@ -16,28 +16,31 @@ const UploadFiles = () => {
 
 
     const upload = () => {
-        let currentFile = selectedFiles[0];
+        // let currentFile = selectedFiles[0];
 
-        setProgress(0);
-        setCurrentFile(currentFile);
+        // setProgress(0);
+        // setCurrentFile(currentFile);
 
-        UploadService.upload(currentFile, (event) => {
-            setProgress(Math.round((100 * event.loaded) / event.total));
-        })
-            .then((response) => {
-                setMessage(response.data.message);
-                return UploadService.getFiles();
-            })
-            .then((files) => {
-                setFileInfos(files.data);
-            })
-            .catch(() => {
-                setProgress(0);
-                setMessage("Could not upload the file!");
-                setCurrentFile(undefined);
-            });
+        // UploadService.upload(currentFile, (event) => {
+        //     setProgress(Math.round((100 * event.loaded) / event.total));
+        // })
+        //     .then((response) => {
+        //         setMessage(response.data.message);
+        //         return UploadService.getFiles();
+        //     })
+        //     .then((files) => {
+        //         setFileInfos(files.data);
+        //     })
+        //     .catch(() => {
+        //         setProgress(0);
+        //         setMessage("Could not upload the file!");
+        //         setCurrentFile(undefined);
+        //     });
 
-        setSelectedFiles(undefined);
+        // setSelectedFiles(undefined);
+        document.getElementById("progress-bar").style.display = "block";
+        var bar = document.getElementById("bar");
+        bar.classList.add("color");
     };
 
     useEffect(() => {
@@ -61,6 +64,10 @@ const UploadFiles = () => {
                     </div>
                 </div>
             )}
+
+            <div id="progress-bar" class="progress" style={{display: 'none'}}>
+                <div id="bar"></div>
+            </div>
 
             <label className="btn btn-default">
                 <input type="file" onChange={selectFile} />

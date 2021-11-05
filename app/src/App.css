@@ -36,3 +36,37 @@
     transform: rotate(360deg);
   }
 }
+
+.progress{
+  position: relative;
+  height: 10px;
+  width: 580px;
+  border: 5px solid #4b4b4b;
+  border-radius: 15px;
+}
+.progress .color{
+  position: absolute;
+  background-color: #599e50;
+  width: 0px;
+  height: 5px;
+  border-radius: 15px;
+  animation: progres 3s;
+  animation-fill-mode: forwards; 
+}
+@keyframes progres{
+  0%{
+    width: 0%;
+  }
+  25%{
+      width: 50%;
+  }
+  50%{
+      width: 75%;
+  }
+  75%{
+      width: 85%;
+  }
+  100%{
+      width: 100%;
+  }
+};
