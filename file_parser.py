@@ -55,13 +55,17 @@ def parse_file(file_path, motif_len=24):
     # Shuffle the training set
     random.shuffle(training_set)
 
-    # Partition the training set into 3 different training + validation sets
-    size = int(len(training_set) / 3)
-    first_valid, first_train = training_set[0: size], training_set[size:]
-    second_valid, second_train = training_set[size: size + size], training_set[0:size] + training_set[size + size:]
-    third_valid, third_train = training_set[size + size:], training_set[0: size + size]
+    # Partition the training set into 20 sets of 3 different training + validation sets
+    segment_size = int(len(training_set)/20)
+    size = int(len(training_set) / 60)
+    segments = []
+    for i in range(19):
 
-    return first_train, first_valid, second_train, second_valid, third_train, third_valid
+        first_valid, first_train = training_set[(i*segment_size): size], training_set[(i*segment_size) + size: (i+1)*segment_size]
+        second_valid, second_train = training_set[(i*segment_size) + size: (i*segment_size) + size + size], training_set[(i*segment_size): (i*segment_size) + size] + training_set[(i*segment_size) + size + size:((i+1)*segment_size)]
+        third_valid, third_train = training_set[(i*segment_size) + size + size:((i+1)*segment_size)], training_set[(i*segment_size):(i*segment_size) + size + size]
+        segments.append((first_train, first_valid, second_train, second_valid, third_train, third_valid))
+    return segments
 
 
 def pad_sequence(sequence, motif_len, kind='DNA'):
