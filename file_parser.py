@@ -14,8 +14,8 @@ pad_sequence() is implemented from an algorithm described in DeepBind supplement
 class Initialise(Dataset):
 
     def __init__(self, dataset):
-        self.x = torch.from_numpy(np.asarray([d[0] for d in dataset]))
-        self.y = torch.from_numpy(np.asarray([d[1] for d in dataset]))
+        self.x = torch.from_numpy(np.asarray([d[0] for d in dataset], dtype=np.float32))
+        self.y = torch.from_numpy(np.asarray([d[1] for d in dataset], dtype=np.float32))
         self.len = len(self.x)
 
     def __getitem__(self, i):
@@ -29,14 +29,12 @@ def load_as_tensor(dataset, batch_size):
     return DataLoader(dataset=Initialise(dataset), batch_size=batch_size)
 
 
-def parse_file(file_path, motif_len=24, reverse_complement=False, batch_size=64):
+def parse_file(file_path, motif_len=24):
     """
-    Parses a given gzip file to tensors which is later given as input to a neural network
+    Partitions a given gzip file to lists which can all then be parsed as tensors
 
     :param file_path: str
     :param motif_len: int
-    :param reverse_complement: bool
-    :param batch_size: int
     :return:
     """
 
@@ -51,12 +49,8 @@ def parse_file(file_path, motif_len=24, reverse_complement=False, batch_size=64)
             sequence = row[2]
             shuffled_sequence = shuffle(row[2])
 
-            training_set.append([pad_sequence(sequence, motif_len), False])
-            training_set.append([pad_sequence(shuffled_sequence, motif_len), True])
-
-            if reverse_complement:
-                training_set.append([pad_sequence(get_reverse_complement(sequence), motif_len), False])
-                training_set.append([pad_sequence(shuffle(get_reverse_complement(sequence)), motif_len), True])
+            training_set.append([pad_sequence(sequence, motif_len), [1]])
+            training_set.append([pad_sequence(shuffled_sequence, motif_len), [0]])
 
     # Shuffle the training set
     random.shuffle(training_set)
@@ -67,7 +61,7 @@ def parse_file(file_path, motif_len=24, reverse_complement=False, batch_size=64)
     second_valid, second_train = training_set[size: size + size], training_set[0:size] + training_set[size + size:]
     third_valid, third_train = training_set[size + size:], training_set[0: size + size]
 
-    return first_train, first_valid, second_train, second_valid, third_train, third_valid, training_set
+    return first_train, first_valid, second_train, second_valid, third_train, third_valid
 
 
 def pad_sequence(sequence, motif_len, kind='DNA'):
@@ -79,11 +73,11 @@ def pad_sequence(sequence, motif_len, kind='DNA'):
         for j in range(4):
             if i - motif_len + 1 < len(sequence) and sequence[i - motif_len + 1] == 'N' or \
                     i < motif_len - 1 or i > len(sequence) + motif_len - 2:
-                S[i, j] = 0.25
+                S[i, j] = np.float32(0.25)
             elif sequence[i - motif_len + 1] == base[j]:
-                S[i, j] = 1
+                S[i, j] = np.float32(1)
             else:
-                S[i, j] = 0
+                S[i, j] = np.float32(0)
     return np.transpose(S)
 
 
@@ -92,31 +86,3 @@ def shuffle(sequence):
     random.shuffle(b)
     d = ''.join([str(x) for x in b])
     return d
-
-
-def complement(sequence):
-    dict_complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N'}
-    complement_sequence = [dict_complement[base] for base in sequence]
-    return complement_sequence
-
-
-def get_reverse_complement(sequence):
-    sequence = list(sequence)
-    sequence.reverse()
-    return ''.join(complement(sequence))
-
-
-# ----------------------- Script-------------------------------------------------------------------
-
-file_path = r'C:\Users\prash\deep_genetic_analyser\ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
-first_train, first_valid, second_train, second_valid, third_train, third_valid, train_dataset = \
-    parse_file(file_path)
-
-batch_size = 64
-
-first_valid = load_as_tensor(first_valid, batch_size)
-second_valid = load_as_tensor(second_valid, batch_size)
-third_valid = load_as_tensor(third_valid, batch_size)
-first_train = load_as_tensor(first_train, batch_size)
-second_train = load_as_tensor(second_train, batch_size)
-third_train = load_as_tensor(third_train, batch_size)
