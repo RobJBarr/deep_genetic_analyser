@@ -1,87 +1,127 @@
-import numpy as np
-import csv
-import math
-import random
-from scipy.stats import bernoulli
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 """
-There are four computational stages, in order:
-1. convolution
-2. rectification
-3. pooling
-4. neural network
+PyTorch Implementation based from supplementary notes from DeepBind:
+https://static-content.springer.com/esm/art%3A10.1038%2Fnbt.3300/MediaObjects/41587_2015_BFnbt3300_MOESM51_ESM.pdf
+Implementation of ConvNet is implemented from the description of ConvNet in DeepBind supplementary notes
+
 """
 
-nummotif = 16  # number of motifs to discover
-bases = 'ACGT'  # DNA bases
-basesRNA = 'ACGU'  # RNA bases
-batch_size = 64  # fixed batch size -> see notes to problem about it
-dictReverse = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N'}  # dictionary to implement reverse-complement mode
-reverse_mode = False
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def score(sequence, M, b, weights):
-    return network(pooling(rectification(convolution(sequence, M), b)), weights)
+def divide_two_tensors(x):
+    l = torch.unbind(x)
+    list1 = [l[2 * i] for i in range(int(x.shape[0] / 2))]
+    list2 = [l[2 * i + 1] for i in range(int(x.shape[0] / 2))]
+    x1 = torch.stack(list1, 0)
+    x2 = torch.stack(list2, 0)
+    return x1, x2
 
 
-# Convolution stage
-# M represents motif detectors, which is a (d, m, 4) matrix
-def convolution(sequence, M):
-    d = M.shape[0]
-    m = M.shape[1]
+class ConvNet(nn.Module):
+    def __init__(self, num_motifs, motif_len, max_pool, hidden_layer, training_mode, dropout_value,
+                 learning_rate, learning_momentum, initial_weight,
+                 neural_weight, weight_decay1, weight_decay2, weight_decay3):
+        """
 
-    S = pad_sequence(sequence, m)  # (n+2m−2, 4) matrix
-    X = np.zeros((len(sequence) + m - 1, d))  # (n+m-1, d) matrix
+        :param num_motifs: int
+        :param motif_len: int
+        :param max_pool: bool
+        :param hidden_layer: bool
+        :param training_mode: bool
+        :param dropout_value: float
+        :param learning_rate: float
+        :param learning_momentum: float
+        :param initial_weight: float
+        :param neural_weight: float
+        """
 
-    for i in range(len(sequence) + m - 1):
-        for k in range(M.shape[0]):
-            sum = 0
-            for j in range(m):
-                for l in range(4):
-                    sum += S[i + j, l] * M[k, j, l]
-            X[i, k] = sum
+        super(ConvNet, self).__init__()
+        self.max_pool = max_pool
+        self.hidden_layer = hidden_layer
+        self.training_mode = training_mode
+        self.dropout_value = dropout_value
+        self.learning_rate = learning_rate
+        self.learning_momentum = learning_momentum
+        self.initial_weight = initial_weight
+        self.neural_weight = neural_weight
+        self.weight_decay1 = weight_decay1
+        self.weight_decay2 = weight_decay2
+        self.weight_decay3 = weight_decay3
 
-    return X
+        self.convolution_weights = torch.randn(num_motifs, 4, motif_len).to(device)
+        torch.nn.init.normal_(self.convolution_weights, std=self.initial_weight)
+        self.convolution_weights.requires_grad = True
 
+        self.rectification_weights = torch.randn(num_motifs).to(device)
+        torch.nn.init.normal_(self.rectification_weights)
+        self.rectification_weights = -self.rectification_weights
+        self.rectification_weights.requires_grad = True
 
-def pad_sequence(sequence, m):
-    assert m > 0
-    base = ["A", "C", "G", "T", "N"]
-    row_length = len(sequence) + 2 * (m - 1)
-    S = np.zeros((row_length, 4))
-    for i in range(0, row_length):
-        for j in range(0, 4):
-            if (i < m - 1) or (i > len(sequence) + m - 2) or (sequence[i - m + 1] == "N"):
-                S[i, j] = 0.25
-            elif sequence[i - m + 1] == base[j]:
-                S[i, j] = 1
+        if hidden_layer:
+            if max_pool:
+                self.hidden_weights = torch.randn(num_motifs, 32).to(device)
             else:
-                S[i, j] = 0
-    return S
+                self.hidden_weights = torch.randn(2 * num_motifs, 32).to(device)
 
+            self.neural_weights = torch.randn(32, 1).to(device)
+            self.weights_neural_bias = torch.randn(1).to(device)
+            self.wHiddenBias = torch.randn(32).to(device)
+            torch.nn.init.normal_(self.neural_weights, std=self.neural_weight)
+            torch.nn.init.normal_(self.weights_neural_bias, std=self.neural_weight)
+            torch.nn.init.normal_(self.hidden_weights, std=0.3)
+            torch.nn.init.normal_(self.wHiddenBias, std=0.3)
 
-# Rectification stage
-# b represents the thresholds, with length d
-def rectification(X, b):
-    Y = np.zeros(X.shape)
-    for i in range(Y.shape[0]):
-        for k in range(Y.shape[1]):
-            Y[i, k] = max(0, X[i, k] - b[k])
-    return Y
+            self.hidden_weights.requires_grad = True
+            self.wHiddenBias.requires_grad = True
 
+        else:
+            if max_pool:
+                self.neural_weights = torch.randn(num_motifs, 1).to(device)
+            else:
+                self.neural_weights = torch.randn(2 * num_motifs, 1).to(device)
 
-# Pooling stage
-# Reminder Y is of shape (n+m-1, d)
-def pooling(Y):
-    d = Y.shape[1]
-    z = np.zeros(d)
-    for k in range(d):
-        z[k] = max(list(Y[:, k]))
-    return z
+            self.weights_neural_bias = torch.randn(1).to(device)
+            torch.nn.init.normal_(self.neural_weights, mean=0, std=self.neural_weight)
+            torch.nn.init.normal_(self.weights_neural_bias, mean=0, std=self.neural_weight)
 
+        self.neural_weights.requires_grad = True
+        self.weights_neural_bias.requires_grad = True
 
-# Neural Network stage
-# W represents the weights
-def network(z, W):
-    pass
+    def forward_pass(self, x):
+        conv = F.conv1d(input=x, weight=self.convolution_weights, bias=self.rectification_weights)
+        rect = torch.clamp(input=conv, min=0)
+        pool, _ = torch.max(input=rect, dim=2)
+
+        if not self.max_pool:
+            avg_pool = torch.mean(input=rect, dim=2)
+            pool = torch.cat(tensors=(pool, avg_pool), dim=1)
+
+        if not self.hidden_layer:
+            if self.training_mode:
+                pool_drop = pool
+                out = pool_drop @ self.neural_weights
+                out.add_(self.weights_neural_bias)
+            else:
+                out = self.dropout_value * (pool @ self.neural_weights)
+                out.add_(self.weights_neural_bias)
+
+        else:
+            hid = pool @ self.hidden_weights
+            hid.add_(self.wHiddenBias)
+            hid = hid.clamp(min=0)
+            if self.training_mode:
+                out = self.dropout_value * (hid @ self.neural_weights)
+                out.add_(self.weights_neural_bias)
+            else:
+                out = self.dropout_value * (hid @ self.neural_weights)
+                out.add_(self.weights_neural_bias)
+
+        return out
+
+    def forward(self, x):
+        out = self.forward_pass(x)
+        return out
