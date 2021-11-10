@@ -25,10 +25,12 @@ device = torch.device('cpu')
 
 
 def train_model(file_path):
+    observer = trainingObserver()
+
     # Load the data from the file_path as 20 segments of tensors for training
     segments = parse_file(file_path)
-    for segment in segments:
-        first_train, first_valid, second_train, second_valid, third_train, third_valid = segment
+    for x in range(19):
+        first_train, first_valid, second_train, second_valid, third_train, third_valid = segments[i]
         first_train = load_as_tensor(first_train, 64)
         second_train = load_as_tensor(second_train, 64)
         third_train = load_as_tensor(third_train, 64)
@@ -120,7 +122,21 @@ def train_model(file_path):
                                     auc.append(metrics.roc_auc_score(labels, pred))
 
                                 model_auc[i].append(np.mean(auc))
+        observer.notify((x+1) * 5)
 
 
+class trainingObserver():
+    #Basic observer to update progress bar
+    def __init__(self):
+        self.currentPercentage = 0
+    
+    def notify(self, percentage):
+        self.currentPercentage = percentage
+        self.updateProgressBar()
+    
+    def updateProgressBar():
+        pass
+
+    
 file = r'C:\Users\prash\deep_genetic_analyser\ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
 train_model(file)
