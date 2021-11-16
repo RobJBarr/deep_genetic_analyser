@@ -191,5 +191,5 @@ class trainingObserver():
         pass
 
 
-file = r'C:\Users\prash\deep_genetic_analyser\ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
+file = r'ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
 train_model(file)
