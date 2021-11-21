@@ -176,6 +176,16 @@ def train_model(file_path):
     print('best_weight_decay2=', best_weight_decay2)
     print('best_weight_decay3=', best_weight_decay3)
 
+    # Return model with the best parameters which will be used for predicting other sequences
+    optimal_model = ConvNet(num_motifs=16, motif_len=24, max_pool=is_max,
+                            hidden_layer=is_hidden_layer, training_mode=False,
+                            dropout_value=best_dropout_value, learning_rate=best_learning_rate,
+                            learning_momentum=best_learning_momentum, initial_weight=best_initial_weight,
+                            neural_weight=best_neural_weight, weight_decay1=best_weight_decay1,
+                            weight_decay2=best_weight_decay2,
+                            weight_decay3=best_weight_decay3).to('cpu')
+    return optimal_model
+
 
 class trainingObserver():
     # Basic observer to update progress bar
@@ -192,4 +202,14 @@ class trainingObserver():
 
 
 file = r'ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
-train_model(file)
+trained_model = train_model(file)  # Takes approx 1052 seconds (17 minutes)
+score = trained_model.predict('ATGG')
+
+# model = ConvNet(num_motifs=16, motif_len=24, max_pool=False,
+#                 hidden_layer=True, training_mode=False,
+#                 dropout_value=1.0, learning_rate=0.002053042011452878,
+#                 learning_momentum=0.9656306177225347, initial_weight=6.617003945049251e-06,
+#                 neural_weight=0.00502249006732005, weight_decay1=1.548339629388432e-10,
+#                 weight_decay2=0.0003131351742556735,
+#                 weight_decay3=5.807861892677937e-10).to('cpu')
+# print(model.convolution_weights)
