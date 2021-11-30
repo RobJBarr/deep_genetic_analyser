@@ -1,23 +1,28 @@
 # How to run locally
-Create an environment
+1. Change to directory
+> cd deep_genetic_analyser 
+
+2. Create an environment
 >python3 -m venv venv
 
-Activate the environment (Windows)
+3a. Activate the environment (Windows)
 >venv\Scripts\activate
 
-Activate the environment (Linux/OSX)
+3b. Activate the environment (Linux/OSX)
 >. venv/bin/activate
 
-Install Flask within activated environment
+4. Install Flask within activated environment
 >pip3 install Flask
 
-Install Requirements
+5. Install Requirements
 >pip3 install -r requirements.txt
 
-If on CMD (Windows)
+6a. If on CMD (Windows)
 > set FLASK_APP=app.py
+
 > flask run
 
-If on Bash (Linux/OSX)
+6b. If on Bash (Linux/OSX)
 >export FLASK_APP=app
+
 >flask run
