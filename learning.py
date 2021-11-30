@@ -21,9 +21,11 @@ def sqrt_sampler(a, b):
     return y
 
 
-def train_model(file_path):
+def train_model(file_path, observer):
+    yield "data: {}\n\n".format(0)
+    observer.update(0)
+
     device = torch.device('cpu')
-    observer = trainingObserver()
     num_epochs = 5
     learning_steps_list = [4000, 8000, 12000, 16000, 20000]
     best_AUC = 0
@@ -160,21 +162,8 @@ def train_model(file_path):
                 best_weight_decay2 = model.weight_decay2
                 best_weight_decay3 = model.weight_decay3
 
-        print('epoch ', n + 1, 'finished')
-        observer.notify((n + 1) * 20)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
-
-    print('max=', is_max)
-    print('hidden_layer=', is_hidden_layer)
-    print('best_AUC=', best_AUC)
-    print('best_learning_steps=', best_learning_steps)
-    print('best_Learning_rate=', best_learning_rate)
-    print('best_learning_momentum=', best_learning_momentum)
-    print('best_initial_weight=', best_initial_weight)
-    print('best_dropout_value=', best_dropout_value)
-    print('best_neural_weight=', best_neural_weight)
-    print('best_weight_decay1=', best_weight_decay1)
-    print('best_weight_decay2=', best_weight_decay2)
-    print('best_weight_decay3=', best_weight_decay3)
+        yield "data: {}\n\n".format((n + 1) * 18)
+        observer.update((n + 1) * 18)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
 
     # Return model with the best parameters which will be used for predicting other sequences
     optimal_model = ConvNet(num_motifs=16, motif_len=24, max_pool=is_max,
@@ -184,32 +173,14 @@ def train_model(file_path):
                             neural_weight=best_neural_weight, weight_decay1=best_weight_decay1,
                             weight_decay2=best_weight_decay2,
                             weight_decay3=best_weight_decay3).to('cpu')
-    return optimal_model
+    yield "data: {}\n\n".format(100)
+    observer.update(100)
 
 
-class trainingObserver():
-    # Basic observer to update progress bar
-    def __init__(self):
-        self.currentPercentage = 0
+class TrainingObserver:
+    def __init__(self, task_id):
+        self.current_percentage = 0
+        self.task_id = task_id
 
-    def notify(self, percentage):
-        self.currentPercentage = percentage
-        self.updateProgressBar()
-        print('At ', percentage)
-
-    def updateProgressBar(self):
-        pass
-
-
-file = r'ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
-trained_model = train_model(file)  # Takes approx 1052 seconds (17 minutes)
-score = trained_model.predict('ATGG')
-
-# model = ConvNet(num_motifs=16, motif_len=24, max_pool=False,
-#                 hidden_layer=True, training_mode=False,
-#                 dropout_value=1.0, learning_rate=0.002053042011452878,
-#                 learning_momentum=0.9656306177225347, initial_weight=6.617003945049251e-06,
-#                 neural_weight=0.00502249006732005, weight_decay1=1.548339629388432e-10,
-#                 weight_decay2=0.0003131351742556735,
-#                 weight_decay3=5.807861892677937e-10).to('cpu')
-# print(model.convolution_weights)
+    def update(self, percentage):
+        self.current_percentage = percentage
