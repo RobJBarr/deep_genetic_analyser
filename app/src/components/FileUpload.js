@@ -12,6 +12,7 @@ const UploadFiles = () => {
 
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
+        upload();
     };
 
 
@@ -49,7 +50,7 @@ const UploadFiles = () => {
         });
     }, []);
     return (
-        <div>
+        <div class="body">
             {currentFile && (
                 <div className="progress">
                     <div
@@ -65,37 +66,42 @@ const UploadFiles = () => {
                 </div>
             )}
 
-            <div id="progress-bar" class="progress" style={{display: 'none'}}>
+            <div id="progress-bar" class="progress" style={{display:'none'}}>
                 <div id="bar"></div>
             </div>
+            
+            <div class="upload">
+            
+                <div class="dropZoneContainer">  
+                    <input type="file" id="drop_zone" class="FileUpload" onChange={selectFile} />
+                    <div class="dropZoneOverlay">Upload For Secure Analysis</div>
+                    <div class="dropZoneIcon"/>
+                </div>
+            
 
-            <label className="btn btn-default">
-                <input type="file" onChange={selectFile} />
-            </label>
-
-            <button
-                className="btn btn-success"
-                disabled={!selectedFiles}
-                onClick={upload}
-            >
-                Upload
-            </button>
-
-            <div className="alert alert-light" role="alert">
+            <div className="alert alert-light" role="alert" style={{opacity:'0%'}}>
                 {message}
             </div>
-
-            <div className="card">
-                <div className="card-header">Your uploads</div>
-                <ul className="list-group list-group-flush">
-                    {fileInfos &&
-                        fileInfos.map((file, index) => (
-                            <li className="list-group-item" key={index}>
-                                <a href={file.url}>{file.name}</a>
-                            </li>
-                        ))}
-                </ul>
             </div>
+            <div class="uploaded-files">
+                <div className="card">
+                    <div className="card-header">Your uploads</div>
+                    <ul className="list-group list-group-flush">
+                        {fileInfos &&
+                            fileInfos.map((file, index) => (
+                                <li className="list-group-item" key={index}>
+                                    <a href={file.url}>{file.name}</a>
+                                </li>
+                            ))}
+                    </ul>
+                </div>
+                {currentFile
+                    }
+            </div>
+
+            
+
+            
         </div>
     );
 };

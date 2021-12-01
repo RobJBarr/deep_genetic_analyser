@@ -6,9 +6,9 @@ import FileUpload from "./components/FileUpload";
 
 function App() {
   return (
-    <div className="container" style={{ width: "600px" }}>
+    <div className="container" style={{ width: "100%" }}>
       <div className="my-3">
-        <h4>Analyse your genes</h4>
+        <div class="header">Deep Genetic Analyser</div>
       </div>
 
       <FileUpload />
