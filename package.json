@@ -2,6 +2,7 @@
     "name": "deep-genetic-analyser",
     "version": "0.1.0",
     "scripts": {
-      "start": "npm start --prefix app"
+        "build": "cd app/ && npm install && npm run build",
+        "start": "npm start --prefix app"
     }
   }
