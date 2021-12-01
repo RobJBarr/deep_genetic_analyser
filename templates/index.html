@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://drive.google.com/uc?export=view&id=1b-2_6zWL_6F360SBlZrdIGrpsuWgNkKz"/>
+    <link rel="stylesheet" href="style.css">
+    <title>Training Dataset</title>
+</head>
+<body>
+<div class="container">
+    <h1>Training data: {{ file }}</h1>
+    <h1>Task Id: {{ task_id }}</h1>
+    <progress id="target_progress" value="0" max="100"></progress>
+</div>
+
+<script>
+    var targetProgress = document.getElementById("target_progress");
+    var url = "process_train/{{ file }}/{{ task_id }}";
+    var eventSource = new EventSource(url);
+    eventSource.onmessage = function (e) {
+        if (e.data === "100") {
+            console.log("Finished Training")
+            eventSource.close()
+        } else {
+            targetProgress.value = e.data;
+        }
+    }
+</script>
+
+</body>
+</html>

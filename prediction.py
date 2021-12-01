@@ -1,6 +1,9 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from file_parser import pad_sequence
 
 """
 PyTorch Implementation based from supplementary notes from DeepBind:
@@ -10,15 +13,6 @@ Implementation of ConvNet is implemented from the description of ConvNet in Deep
 """
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-
-def divide_two_tensors(x):
-    l = torch.unbind(x)
-    list1 = [l[2 * i] for i in range(int(x.shape[0] / 2))]
-    list2 = [l[2 * i + 1] for i in range(int(x.shape[0] / 2))]
-    x1 = torch.stack(list1, 0)
-    x2 = torch.stack(list2, 0)
-    return x1, x2
 
 
 class ConvNet(nn.Module):
@@ -125,3 +119,10 @@ class ConvNet(nn.Module):
     def forward(self, x):
         out = self.forward_pass(x)
         return out
+
+    def predict(self, seq):
+        padded_seq = pad_sequence(sequence=seq, motif_len=24, kind='DNA')
+        padded_seq = np.expand_dims(padded_seq, axis=0)
+        x = torch.from_numpy(padded_seq)
+        out = self.forward_pass(x)
+        return out.item()

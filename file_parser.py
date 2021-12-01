@@ -66,19 +66,19 @@ def parse_file(file_path, motif_len=24):
 
 def pad_sequence(sequence, motif_len, kind='DNA'):
     rows = len(sequence) + 2 * motif_len - 2
-    S = np.empty([rows, 4])
+    s = np.empty(shape=[rows, 4], dtype=np.float32)
     base = ['A', 'C', 'G', 'T'] if kind == 'DNA' else ['A', 'C', 'G', 'U']
-
+    m = motif_len
+    n = len(sequence)
     for i in range(rows):
         for j in range(4):
-            if i - motif_len + 1 < len(sequence) and sequence[i - motif_len + 1] == 'N' or \
-                    i < motif_len - 1 or i > len(sequence) + motif_len - 2:
-                S[i, j] = np.float32(0.25)
-            elif sequence[i - motif_len + 1] == base[j]:
-                S[i, j] = np.float32(1)
+            if 0 <= i - m + 1 < n and sequence[i - m + 1] == 'N' or i < m - 1 or i > n + m - 2:
+                s[i, j] = np.float32(0.25)
+            elif sequence[i - m + 1] == base[j]:
+                s[i, j] = np.float32(1)
             else:
-                S[i, j] = np.float32(0)
-    return np.transpose(S)
+                s[i, j] = np.float32(0)
+    return np.transpose(s)
 
 
 def shuffle(sequence):
