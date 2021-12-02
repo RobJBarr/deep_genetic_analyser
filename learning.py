@@ -22,7 +22,6 @@ def sqrt_sampler(a, b):
 
 
 def train_model(file_path, observer):
-    yield "data: {}\n\n".format(0)
     observer.update(0)
 
     device = torch.device('cpu')
@@ -162,7 +161,7 @@ def train_model(file_path, observer):
                 best_weight_decay2 = model.weight_decay2
                 best_weight_decay3 = model.weight_decay3
 
-        yield "data: {}\n\n".format((n + 1) * 18)
+        #yield "data: {}\n\n".format((n + 1) * 18)
         observer.update((n + 1) * 18)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
 
     # Return model with the best parameters which will be used for predicting other sequences
@@ -173,7 +172,7 @@ def train_model(file_path, observer):
                             neural_weight=best_neural_weight, weight_decay1=best_weight_decay1,
                             weight_decay2=best_weight_decay2,
                             weight_decay3=best_weight_decay3).to('cpu')
-    yield "data: {}\n\n".format(100)
+    #yield "data: {}\n\n".format(100)
     observer.update(100)
 
 
@@ -183,4 +182,5 @@ class TrainingObserver:
         self.task_id = task_id
 
     def update(self, percentage):
+        yield "data: {}\n\n".format(percentage)
         self.current_percentage = percentage

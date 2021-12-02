@@ -71,21 +71,21 @@
   }
 }
 
-.progress{
-  position: relative;
-  height: 3%;
-  width: 100%;
-  border: 5px solid #4b4b4b;
+
+progress {
+  border: 3px solid #4b4b4b;
+  
   border-radius: 15px;
 }
-.progress .color{
-  position: absolute;
-  background-color: #599e50;
-  width: 0px;
-  height: 10px;
-  animation: progres 3s;
-  animation-fill-mode: forwards; 
+progress::-moz-progress-bar {
+  position: relative;
+  height: 100%;
+  width: 0%;
+  
+  background: #599e50;
+  border-radius: 15px;
 }
+
 
 @keyframes progres{
   0%{

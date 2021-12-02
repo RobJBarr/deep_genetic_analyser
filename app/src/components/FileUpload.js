@@ -12,7 +12,18 @@ const UploadFiles = () => {
 
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
-        upload();
+        var progressbar = document.getElementById("progress-bar")
+        progressbar.style.display = "block";
+        var eventSource = UploadService.upload(event.target);
+        eventSource.onmessage = function (e) {
+            if (e.data === "100") {
+                console.log("Finished Training")
+                eventSource.close()
+            } else {
+                progressbar.value = e.data;
+            }
+        }
+        progressbar.classList.add("color");
     };
 
 
@@ -39,37 +50,19 @@ const UploadFiles = () => {
         //     });
 
         // setSelectedFiles(undefined);
-        document.getElementById("progress-bar").style.display = "block";
-        var bar = document.getElementById("bar");
-        bar.classList.add("color");
+        
     };
 
-    useEffect(() => {
-        UploadService.getFiles().then((response) => {
-            setFileInfos(response.data);
-        });
-    }, []);
+    // useEffect(() => {
+    //     UploadService.getFiles().then((response) => {
+    //         setFileInfos(response.data);
+    //     });
+    // }, []);
     return (
         <div class="body">
-            {currentFile && (
-                <div className="progress">
-                    <div
-                        className="progress-bar progress-bar-info progress-bar-striped"
-                        role="progressbar"
-                        aria-valuenow={progress}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        style={{ width: progress + "%" }}
-                    >
-                        {progress}%
-                    </div>
-                </div>
-            )}
-
-            <div id="progress-bar" class="progress" style={{display:'none'}}>
-                <div id="bar"></div>
-            </div>
-            
+            {currentFile}
+        
+            <progress id="progress-bar"value="0" max="100" style={{display:'none', width:"100%"}}/>
             <div class="upload">
             
                 <div class="dropZoneContainer">  

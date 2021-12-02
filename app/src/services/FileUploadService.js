@@ -1,20 +1,21 @@
+import axios from "axios";
+import httpCommon from "../http-common";
 import http from "../http-common";
 
-const upload = (file, onUploadProgress) => {
+const upload = (file) => {
   let formData = new FormData();
-
   formData.append("file", file);
 
-  return http.post("/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    onUploadProgress,
-  });
+    var path = file.files[0].name;    
+    var url = "http://localhost:5000/process_train/" + path + "/0";
+
+    console.log(url);
+    return new EventSource(url);
+    
 };
 
 const getFiles = () => {
-  return http.get("/files");
+  return http.get("http://localhost:8080/files", {crossDomain: true});
 };
 
 export default {
