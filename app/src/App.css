@@ -75,6 +75,44 @@ input[type="radio"] {
   margin-right: 2px;
 }
 
+.training-button {
+  width: 10%;
+  height: 5%;
+  margin: auto;
+  border-radius: 15px;
+  background-color: #53b652a6;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.8s ease;
+  position: relative;
+  border: 2px solid #111;
+  margin: 0 auto;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+    rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
+}
+
+.animation::before,
+.animation::after {
+  position: absolute;
+  display: block;
+  content: "";
+  width: 100%;
+  height: 100%;
+}
+
+.animation:after {
+  left: -100%;
+  clip-path: polygon(10% 0, 70% 0, 90% 100%, 30% 100%);
+  background-color: rgba(255, 255, 255, 0.6);
+  transition: all 300ms ease;
+}
+
+.animation:hover::after {
+  left: 100%;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

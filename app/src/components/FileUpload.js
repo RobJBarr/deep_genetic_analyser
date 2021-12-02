@@ -22,18 +22,22 @@ const UploadFiles = () => {
     var checkedValue = "null";
 
     const uncheck = fileName => (event) => {
-        // var radioButtons = document.querySelectorAll('input[value="' + fileName + '"]');
         var nullButtons = document.querySelectorAll('input[value="null"]');
+        var trainingButton = document.querySelector(".training-button");
         if (checkedValue == fileName) {
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = true;
             })
+            trainingButton.disabled = true;
+            trainingButton.classList.remove("animation");
             checkedValue = "null";
         } else {
-            checkedValue = fileName;
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = false;
             })
+            trainingButton.disabled = false;
+            trainingButton.classList.add("animation");
+            checkedValue = fileName;
         }
     }
 
@@ -142,6 +146,7 @@ const UploadFiles = () => {
                     <input type="radio" name="files" value="null" style={{display:"none"}}></input>
                 </div>
             </div>
+            <button class="training-button" disabled>Begin Training</button>
         </div>
     );
 };
