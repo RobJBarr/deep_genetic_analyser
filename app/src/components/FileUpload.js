@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import UploadService from "../services/FileUploadService";
-
+import $ from 'jquery';
 const UploadFiles = () => {
 
     const [selectedFiles, setSelectedFiles] = useState(undefined);
@@ -13,10 +13,13 @@ const UploadFiles = () => {
 
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
-        upload();
         for (const file of event.target.files) {
+            if (uploadedFiles.indexOf(file.name) == -1)
             uploadedFiles.push(file.name);
         }
+        refreshRadios();
+        upload();
+        
     };
 
     var checkedValue = "null";
@@ -35,6 +38,34 @@ const UploadFiles = () => {
                 thisButton.checked = false;
             })
         }
+    }
+
+    const refreshRadios = () => {
+        var wrapper = document.getElementById('file-table');
+        var elementsToInsert = [];
+        for(var i = 0; i < uploadedFiles.length; i++) {
+            var radio = document.createElement('input');
+            var label = document.createElement('label');
+            radio.type = 'radio';
+            radio.name = 'files';
+            radio.value = uploadedFiles[i];
+            radio.onchange = uncheck(radio.value)
+            label.setAttribute("for", uploadedFiles[i]);
+            label.innerHTML = uploadedFiles[i];
+          
+            elementsToInsert.push({ radio: radio , label: label });
+          }
+          wrapper.innerHTML = "";
+          for(var i = 0; i < elementsToInsert.length; i++) {
+          
+            // Array.prototype.splice removes items from the Array and return the an array containing the removed items (See https://www.w3schools.com/jsref/jsref_splice.asp)
+            var toInsert = elementsToInsert[i];
+            
+            wrapper.appendChild(toInsert.radio);
+            wrapper.appendChild(toInsert.label);
+            
+            wrapper.appendChild(document.createElement("br"));
+          }
     }
 
     // const deselectableRadios = (rootElement) => {
@@ -130,9 +161,8 @@ const UploadFiles = () => {
                             ))}
                     </ul>
                 </div>
-                {currentFile
-                    }
-                <div class="uploaded-file-table">
+                {currentFile}
+                <div class="uploaded-file-table" id="file-table">
                     {uploadedFiles.map((fileName) => (
                             <div class="uploaded-file-radio">
                                 <input type="radio" name="files" value={fileName} onClick={uncheck(fileName)}/>
