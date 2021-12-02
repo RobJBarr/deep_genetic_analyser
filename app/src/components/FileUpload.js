@@ -9,12 +9,48 @@ const UploadFiles = () => {
     const [message, setMessage] = useState("");
 
     const [fileInfos, setFileInfos] = useState([]);
+    const uploadedFiles = ["test1.pdf", "test2.pdf"];
 
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
         upload();
+        for (const file of event.target.files) {
+            uploadedFiles.push(file.name);
+        }
     };
 
+    var checkedValue = "null";
+
+    const uncheck = fileName => (event) => {
+        // var radioButtons = document.querySelectorAll('input[value="' + fileName + '"]');
+        var nullButtons = document.querySelectorAll('input[value="null"]');
+        if (checkedValue == fileName) {
+            nullButtons.forEach(function (thisButton) {
+                thisButton.checked = true;
+            })
+            checkedValue = "null";
+        } else {
+            checkedValue = fileName;
+            nullButtons.forEach(function (thisButton) {
+                thisButton.checked = false;
+            })
+        }
+    }
+
+    // const deselectableRadios = (rootElement) => {
+    //     if(!rootElement) rootElement = document;
+    //     if(!window.radioChecked) window.radioChecked = {};
+    //     window.radioClick = function(e) {
+    //       const obj = e.target, name = obj.name || "unnamed";
+    //       if(e.keyCode) return obj.checked = e.keyCode!=32;
+    //       obj.checked = window.radioChecked[name] != obj;
+    //       window.radioChecked[name] = obj.checked ? obj : null;
+    //     }
+    //     rootElement.querySelectorAll("input[type='radio']").forEach( radio => {
+    //       radio.setAttribute("onclick", "radioClick(event)");
+    //       radio.setAttribute("onkeyup", "radioClick(event)");
+    //     });
+    //   }
 
     const upload = () => {
         // let currentFile = selectedFiles[0];
@@ -78,7 +114,6 @@ const UploadFiles = () => {
                     <div class="dropZoneIcon"/>
                 </div>
             
-
             <div className="alert alert-light" role="alert" style={{opacity:'0%'}}>
                 {message}
             </div>
@@ -97,11 +132,16 @@ const UploadFiles = () => {
                 </div>
                 {currentFile
                     }
+                <div class="uploaded-file-table">
+                    {uploadedFiles.map((fileName) => (
+                            <div class="uploaded-file-radio">
+                                <input type="radio" name="files" value={fileName} onClick={uncheck(fileName)}/>
+                                <label for={fileName}>{fileName}</label>
+                            </div>
+                        ))}
+                    <input type="radio" name="files" value="null" style={{display:"none"}}></input>
+                </div>
             </div>
-
-            
-
-            
         </div>
     );
 };
