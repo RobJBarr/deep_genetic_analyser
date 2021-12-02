@@ -22,6 +22,7 @@ def sqrt_sampler(a, b):
 
 
 def train_model(file_path, observer):
+    yield "data: {}\n\n".format(0)
     observer.update(0)
 
     device = torch.device('cpu')
@@ -161,19 +162,31 @@ def train_model(file_path, observer):
                 best_weight_decay2 = model.weight_decay2
                 best_weight_decay3 = model.weight_decay3
 
-        #yield "data: {}\n\n".format((n + 1) * 18)
+        yield "data: {}\n\n".format((n + 1) * 18)
         observer.update((n + 1) * 18)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
 
-    # Return model with the best parameters which will be used for predicting other sequences
-    optimal_model = ConvNet(num_motifs=16, motif_len=24, max_pool=is_max,
-                            hidden_layer=is_hidden_layer, training_mode=False,
-                            dropout_value=best_dropout_value, learning_rate=best_learning_rate,
-                            learning_momentum=best_learning_momentum, initial_weight=best_initial_weight,
-                            neural_weight=best_neural_weight, weight_decay1=best_weight_decay1,
-                            weight_decay2=best_weight_decay2,
-                            weight_decay3=best_weight_decay3).to('cpu')
-    #yield "data: {}\n\n".format(100)
+    yield "data: {}\n\n".format(100)
     observer.update(100)
+
+    print('max=', is_max)
+    print('hidden_layer=', is_hidden_layer)
+    print('best_learning_steps=', best_learning_steps)
+    print('best_Learning_rate=', best_learning_rate)
+    print('best_learning_momentum=', best_learning_momentum)
+    print('best_initial_weight=', best_initial_weight)
+    print('best_dropout_value=', best_dropout_value)
+    print('best_neural_weight=', best_neural_weight)
+    print('best_weight_decay1=', best_weight_decay1)
+    print('best_weight_decay2=', best_weight_decay2)
+    print('best_weight_decay3=', best_weight_decay3)
+
+    params = '{"learning_rate":' + str(best_learning_rate) + ', "learning_momentum":' + str(
+        best_learning_momentum) + ', "hidden_layer":' + str(is_hidden_layer).lower() + ', "max":' + str(
+        is_max).lower() + ', "initial_weight":' + str(best_initial_weight) + ', "dropout_value":' + str(
+        best_dropout_value) + ', "neural_weight":' + str(best_neural_weight) + ', "weight_decay1":' + str(
+        best_weight_decay1) + ', "weight_decay2":' + str(best_weight_decay2) + ', "weight_decay3":' + str(
+        best_weight_decay3) + '}'
+    yield 'data: {}\n\n'.format(params)
 
 
 class TrainingObserver:
@@ -182,5 +195,4 @@ class TrainingObserver:
         self.task_id = task_id
 
     def update(self, percentage):
-        yield "data: {}\n\n".format(percentage)
         self.current_percentage = percentage
