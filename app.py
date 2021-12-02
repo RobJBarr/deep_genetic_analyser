@@ -15,7 +15,7 @@ def process():
     if request.method == 'POST':
         f = request.files['file']
         f.save(f.filename)
-        return render_template('index.html', file=f.filename, task_id=0)
+        return render_template('progress.html', file=f.filename, task_id=0)
 
 
 @app.route('/process_train/<file>/<task_id>')

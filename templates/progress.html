@@ -18,9 +18,13 @@
     var url = "process_train/{{ file }}/{{ task_id }}";
     var eventSource = new EventSource(url);
     eventSource.onmessage = function (e) {
-        if (e.data === "100") {
+        if (e.data.includes('{')) {
             console.log("Finished Training")
             eventSource.close()
+            document.body.innerHTML +=
+                `<a id="download" download="model_parameters.json" href="${URL.createObjectURL(new Blob([e.data]))}"> Click me</a>`
+            download.click()
+            download.outerHTML = ""
         } else {
             targetProgress.value = e.data;
         }
