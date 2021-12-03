@@ -61,6 +61,19 @@
   color: #61dafb;
 }
 
+.uploaded-file-radio {
+  position:relative;
+  padding-left: 8px;
+  padding-bottom: 4px;
+}
+
+.uploaded-file-radio:first-child {
+  padding-top: 4px;
+}
+
+input[type="radio"] {
+  margin-right: 2px;
+}
 
 @keyframes App-logo-spin {
   from {
