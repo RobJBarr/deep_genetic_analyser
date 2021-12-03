@@ -22,7 +22,6 @@ def sqrt_sampler(a, b):
 
 
 def train_model(file_path, observer):
-    yield "data: {}\n\n".format(0)
     observer.update(0)
 
     device = torch.device('cpu')
@@ -162,10 +161,8 @@ def train_model(file_path, observer):
                 best_weight_decay2 = model.weight_decay2
                 best_weight_decay3 = model.weight_decay3
 
-        yield "data: {}\n\n".format((n + 1) * 18)
         observer.update((n + 1) * 18)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
 
-    yield "data: {}\n\n".format(100)
     observer.update(100)
 
     print('max=', is_max)
@@ -190,9 +187,10 @@ def train_model(file_path, observer):
 
 
 class TrainingObserver:
-    def __init__(self, task_id):
+    def __init__(self, task_id=0):
         self.current_percentage = 0
         self.task_id = task_id
 
     def update(self, percentage):
         self.current_percentage = percentage
+        yield "data: {}\n\n".format(percentage)

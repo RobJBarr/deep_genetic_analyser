@@ -1,58 +1,59 @@
 import React, { useState, useEffect } from "react";
 import UploadService from "../services/FileUploadService";
-import $ from 'jquery';
 const UploadFiles = () => {
 
     const [selectedFiles, setSelectedFiles] = useState(undefined);
     const [currentFile, setCurrentFile] = useState(undefined);
-    const [progress, setProgress] = useState(0);
     const [message, setMessage] = useState("");
 
     const [fileInfos, setFileInfos] = useState([]);
-    const uploadedFiles = ["test1.pdf", "test2.pdf"];
+    const uploadedFiles = [];
 
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
-        var progressbar = document.getElementById("progress-bar")
-        progressbar.style.display = "block";
-        var eventSource = UploadService.upload(event.target);
-        eventSource.onmessage = function (e) {
-            if (e.data === "100") {
-                console.log("Finished Training")
-                eventSource.close()
-            } else {
-                progressbar.value = e.data;
-            }
-        }
-        progressbar.classList.add("color");
-
         for (const file of event.target.files) {
             if (uploadedFiles.indexOf(file.name) == -1)
             uploadedFiles.push(file.name);
         }
         refreshRadios();
-        upload();
     };
 
+    const beginTraining = () => (event) => {
+        if (checkedValue != "null"){
+            var progressbar = document.getElementById("progress-bar")
+            progressbar.style.display = "block";
+            var eventSource = UploadService.upload(checkedValue);
+            eventSource.onmessage = function (e) {
+                if (e.data === "100") {
+                    console.log("Finished Training")
+                    eventSource.close()
+                } else {
+                    progressbar.value = e.data;
+                }
+            }
+            progressbar.classList.add("color");
+        }
+    }
     var checkedValue = "null";
 
     const uncheck = fileName => (event) => {
+        
         var nullButtons = document.querySelectorAll('input[value="null"]');
         var trainingButton = document.querySelector(".training-button");
-        if (checkedValue == fileName) {
+        if (checkedValue == event.target.value) {
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = true;
             })
-            trainingButton.disabled = true;
+            trainingButton.style = {"display":"none"};
             trainingButton.classList.remove("animation");
             checkedValue = "null";
         } else {
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = false;
             })
-            trainingButton.disabled = false;
             trainingButton.classList.add("animation");
-            checkedValue = fileName;
+            checkedValue = event.target.value;
+            trainingButton.style = {"display":"block"};
         }
     }
 
@@ -169,8 +170,9 @@ const UploadFiles = () => {
                         ))}
                     <input type="radio" name="files" value="null" style={{display:"none"}}></input>
                 </div>
+                <button class="training-button" onClick={beginTraining()} style={{display:"none"}}>Begin Training</button>
             </div>
-            <button class="training-button" disabled>Begin Training</button>
+            
         </div>
     );
 };

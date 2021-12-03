@@ -16,9 +16,8 @@ def process():
 
 
 @app.route('/process_train/<file>/<task_id>')
-def process_train(file, task_id):
-    print("here2")
-    response = Response(train_model(file, TrainingObserver(task_id)), mimetype='text/event-stream')
+def process_train(file):
+    response = Response(train_model(file, TrainingObserver()), mimetype='text/event-stream')
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
