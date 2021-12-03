@@ -4,10 +4,10 @@ const UploadFiles = () => {
     const [selectedFiles, setSelectedFiles] = useState(undefined);
     const [currentFile, setCurrentFile] = useState(undefined);
     const [message, setMessage] = useState("");
-    const [checkedValue, setCheckedValue] = useState(undefined)
+    const [checkedValue, setCheckedValue] = useState(undefined);
     const [fileInfos, setFileInfos] = useState([]);
     const uploadedFiles = [];
-
+    const [optimalParams, setOptimalParams] = useState(undefined);
     const selectFile = (event) => {
         setSelectedFiles(event.target.files);
         for (const file of event.target.files) {
@@ -26,11 +26,12 @@ const UploadFiles = () => {
             progressbar.style.display = "block";
             var eventSource = UploadService.upload(checkedValue);
             eventSource.onmessage = function (e) {
-                if (e.data === "100") {
+                if (e.data.includes('{')) {
                     console.log("Finished Training")
-                    trainingButton.disabled = false;
                     eventSource.close()
-
+                    document.body.innerHTML +=
+                        `<a id="download" download="model_parameters.json" href="${URL.createObjectURL(new Blob([e.data]))}"> Click me</a>`
+                    trainingButton.disabled = false;
                 } else {
                     progressbar.value = e.data;
                 }
