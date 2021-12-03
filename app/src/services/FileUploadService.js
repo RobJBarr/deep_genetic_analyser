@@ -1,7 +1,7 @@
 import http from "../http-common";
 
 const upload = (filename) => {
-    var url = "http://localhost:5000/process_train/" + filename + "/0";
+    var url = "http://localhost:5000/process_train/" + filename;
 
     console.log(url);
     return new EventSource(url);

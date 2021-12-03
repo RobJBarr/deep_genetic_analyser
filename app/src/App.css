@@ -76,11 +76,11 @@ input[type="radio"] {
 }
 
 .training-button {
-  width: fit-content;
-  height: fit-content;
+  width: fit-content + 5%;
+  height: fit-content + 5%;
   margin: auto;
   top: 80%;
-  border-radius: 15px;
+  border-radius: 10px;
   background-color: #53b652a6;
   overflow: hidden;
   display: flex;

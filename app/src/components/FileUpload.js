@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import UploadService from "../services/FileUploadService";
 const UploadFiles = () => {
-
     const [selectedFiles, setSelectedFiles] = useState(undefined);
     const [currentFile, setCurrentFile] = useState(undefined);
     const [message, setMessage] = useState("");
-
+    const [checkedValue, setCheckedValue] = useState(undefined)
     const [fileInfos, setFileInfos] = useState([]);
     const uploadedFiles = [];
 
@@ -19,14 +18,19 @@ const UploadFiles = () => {
     };
 
     const beginTraining = () => (event) => {
-        if (checkedValue != "null"){
+        if (checkedValue != null){
+            var trainingButton = document.querySelector(".training-button");
+            trainingButton.textContent = "Training...";
+            trainingButton.disabled = true;
             var progressbar = document.getElementById("progress-bar")
             progressbar.style.display = "block";
             var eventSource = UploadService.upload(checkedValue);
             eventSource.onmessage = function (e) {
                 if (e.data === "100") {
                     console.log("Finished Training")
+                    trainingButton.disabled = false;
                     eventSource.close()
+
                 } else {
                     progressbar.value = e.data;
                 }
@@ -34,28 +38,30 @@ const UploadFiles = () => {
             progressbar.classList.add("color");
         }
     }
-    var checkedValue = "null";
+    
 
     const uncheck = fileName => (event) => {
         
         var nullButtons = document.querySelectorAll('input[value="null"]');
         var trainingButton = document.querySelector(".training-button");
+        console.log(event.target.value);
         if (checkedValue == event.target.value) {
+            console.log("xd")
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = true;
             })
             trainingButton.style = {"display":"none"};
             trainingButton.classList.remove("animation");
-            checkedValue = "null";
         } else {
+            console.log("asdfa");
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = false;
             })
             trainingButton.classList.add("animation");
-            checkedValue = event.target.value;
-            trainingButton.style = {"display":"block"};
+            setCheckedValue(event.target.value);
         }
     }
+    
 
     const refreshRadios = () => {
         var wrapper = document.getElementById('file-table');
@@ -84,6 +90,13 @@ const UploadFiles = () => {
             wrapper.appendChild(document.createElement("br"));
           }
     }
+
+    useEffect(() => {
+        var trainingButton = document.querySelector(".training-button");
+        if (checkedValue != null) {
+            trainingButton.style = {"display":"block"};
+        }
+    }, [checkedValue]);
 
     // const deselectableRadios = (rootElement) => {
     //     if(!rootElement) rootElement = document;
@@ -126,11 +139,8 @@ const UploadFiles = () => {
         
     };
 
-    // useEffect(() => {
-    //     UploadService.getFiles().then((response) => {
-    //         setFileInfos(response.data);
-    //     });
-    // }, []);
+
+
     return (
         <div class="body">
             {currentFile}

@@ -15,7 +15,7 @@ def process():
         f.save(f.filename)
 
 
-@app.route('/process_train/<file>/<task_id>')
+@app.route('/process_train/<file>')
 def process_train(file):
     response = Response(train_model(file, TrainingObserver()), mimetype='text/event-stream')
     response.headers.add('Access-Control-Allow-Origin', '*')
