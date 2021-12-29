@@ -19,13 +19,16 @@
     var eventSource = new EventSource(url);
 
     eventSource.onmessage = function (e) {
-        if (e.data.includes('{')) {
+        if (e.data.includes('100')) {
             console.log("Finished Training")
             eventSource.close()
             document.body.innerHTML +=
-                `<a id="download" download="model_parameters.json" href="${URL.createObjectURL(new Blob([e.data]))}"> Click me</a>`
+                `<a id="download" download="params.txt" href="./static/params.txt"> Click me</a>` +
+                `<a id="download1" download="weights.npz" href="./static/weights.npz"> Click me</a>`
             download.click()
             download.outerHTML = ""
+            download1.click()
+            download1.outerHTML = ""
         } else {
             targetProgress.value = e.data;
         }
