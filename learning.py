@@ -3,8 +3,10 @@ import numpy as np
 import random
 import torch
 import torch.nn.functional as F
+import time
+import util
 
-from file_parser import load_as_tensor, parse_file
+from file_parser import load_as_tensor, parse_file_folds, parse_file_single
 from prediction import ConvNet
 from sklearn import metrics
 
@@ -24,13 +26,26 @@ def sqrt_sampler(a, b):
 def train_model(file_path, observer):
     observer.update(0)
 
-    device = torch.device('cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     num_epochs = 5
     learning_steps_list = [4000, 8000, 12000, 16000, 20000]
-    best_AUC = 0
+    best_auc = 0
 
-    # Load the data from the file_path
-    first_train, first_valid, second_train, second_valid, third_train, third_valid = parse_file(file_path)
+    # Hyper-parameters for the model
+    best_learning_steps = None
+    best_learning_rate = None
+    best_learning_momentum = None
+    is_hidden_layer = None
+    is_max = None
+    best_initial_weight = None
+    best_dropout_value = None
+    best_neural_weight = None
+    best_weight_decay1 = None
+    best_weight_decay2 = None
+    best_weight_decay3 = None
+
+    # Split the data into 3 different folds from the file_path
+    first_train, first_valid, second_train, second_valid, third_train, third_valid = parse_file_folds(file_path)
 
     # Load the data as tensors
     first_train = load_as_tensor(first_train, 64)
@@ -42,7 +57,7 @@ def train_model(file_path, observer):
     training_sets = [first_train, second_train, third_train]
     validation_sets = [first_valid, second_valid, third_valid]
 
-    # Iterate over the training_sets and validation_sets num_epochs times
+    # Iterate over the training_sets and validation_sets 5 times
     for n in range(num_epochs):
         # Choose randomly when there is a choice for a parameter
         max_pool = random.choice([True, False])
@@ -57,8 +72,8 @@ def train_model(file_path, observer):
         weight_decay2 = log_sampler(10 ** -10, 10 ** -3)
         weight_decay3 = log_sampler(10 ** -10, 10 ** -3)
 
-        # Store the auc performance for each fold and each 4000 learning step interval
-        # E.g model_auc[0][2] is mean auc for model trained on 1st train at 12000 learning steps on 1st valid
+        # Store the mean auc performance for each fold and each 4000 learning step interval
+        # E.g model_auc[0][2] is auc tested on first_valid at 12000 learning steps, trained on first_train
         model_auc = [[], [], []]
 
         # Iterate over 3 different folds
@@ -75,40 +90,39 @@ def train_model(file_path, observer):
             train = training_sets[fold]
             valid = validation_sets[fold]
 
-            # Check if model has 'one hidden layer with 32 rectified-linear units'
+            # Check if model is supposed to have 'one hidden layer with 32 rectified-linear units'
             if model.hidden_layer:
                 optimiser = torch.optim.SGD(
                     params=[model.convolution_weights, model.rectification_weights, model.neural_weights,
-                            model.weights_neural_bias, model.hidden_weights, model.wHiddenBias],
+                            model.neural_bias, model.hidden_weights, model.hidden_bias],
                     lr=model.learning_rate, momentum=model.learning_momentum, nesterov=True)
             else:
                 optimiser = torch.optim.SGD(
                     params=[model.convolution_weights, model.rectification_weights, model.neural_weights,
-                            model.weights_neural_bias],
+                            model.neural_bias],
                     lr=model.learning_rate, momentum=model.learning_momentum, nesterov=True)
 
-            # For the train set selected for this fold, train the model for 20000 update steps
+            # Train the model for 20000 steps on the selected training set
             learning_steps = 0
             while learning_steps <= 20000:
-                # At each update step, go through the data in the train set selected
+                # Iterate through the training set
                 for _, (t_data, t_target) in enumerate(train):
                     t_data = t_data.to(device)
                     t_target = t_target.to(device)
 
-                    # Feed-forward on the model using the data
+                    # Feed-forward on the model
                     output = model(t_data)
 
-                    # Calculate the loss function output, which depends on whether the model has a hidden layer
+                    # Calculate the loss
                     if model.hidden_layer:
                         loss = F.binary_cross_entropy(input=torch.sigmoid(output), target=t_target)
-                        + model.weight_decay1 * model.convolution_weights.norm() \
-                        + model.weight_decay2 * model.hidden_weights.norm() \
+                        + model.weight_decay1 * model.convolution_weights.norm()
+                        + model.weight_decay2 * model.hidden_weights.norm()
                         + model.weight_decay3 * model.neural_weights.norm()
-
                     else:
-                        loss = F.binary_cross_entropy(input=torch.sigmoid(output), target=t_target) \
-                               + model.weight_decay1 * model.convolution_weights.norm() \
-                               + model.weight_decay3 * model.neural_weights.norm()
+                        loss = F.binary_cross_entropy(input=torch.sigmoid(output), target=t_target)
+                        + model.weight_decay1 * model.convolution_weights.norm()
+                        + model.weight_decay3 * model.neural_weights.norm()
 
                     # Perform back propagation
                     optimiser.zero_grad()
@@ -116,74 +130,101 @@ def train_model(file_path, observer):
                     optimiser.step()
                     learning_steps += 1
 
-                    # Every 4000 steps, we evaluate the current performance of the trained model on the valid set.
-                    # So this will be done at 5 times at [4000, 8000, 12000, 16000 and 20000] steps
+                    # Every 4000 steps, evaluate the performance of the trained model on the validation set.
+                    # This will be done 5 times for each fold at [4000, 8000, 12000, 16000 and 20000] steps
                     if learning_steps % 4000 == 0:
                         with torch.no_grad():
-                            # Set the training mode of the model to false
                             model.training_mode = False
                             auc = []
-                            # Iterate through the valid set
+
+                            # Iterate through the validation set
                             for _, (v_data, v_target) in enumerate(valid):
                                 v_data = v_data.to(device)
                                 v_target = v_target.to(device)
 
                                 # Feed-forward on the model
                                 output = model(v_data)
+
                                 # Compute the sigmoid function on the output
                                 pred_sig = torch.sigmoid(output)
                                 pred = pred_sig.cpu().detach().numpy().reshape(output.shape[0])
                                 labels = v_target.cpu().numpy().reshape(output.shape[0])
+
                                 # Find and add the auc performance metric for the data
                                 auc.append(metrics.roc_auc_score(labels, pred))
 
-                            # Get the mean auc performance metric for the valid set on this fold and learning step
+                            # Get the mean auc for the validation set on this fold and learning step
                             model_auc[fold].append(np.mean(auc))
                             print('AUC performance when training fold number ', fold + 1, 'learning steps = ',
                                   learning_steps_list[len(model_auc[fold]) - 1], 'is ', np.mean(auc))
 
-        for num in range(5):
-            # Get the mean auc between the three folds for each learning interval
-            AUC = (model_auc[0][num] + model_auc[1][num] + model_auc[2][num]) / 3
+        # Get the mean auc between the three folds for each learning interval
+        for l_interval in range(5):
+            auc = (model_auc[0][l_interval] + model_auc[1][l_interval] + model_auc[2][l_interval]) / 3
 
-            # Update the best_AUC if the mean auc is higher
-            if AUC > best_AUC:
-                best_AUC = AUC
-                best_learning_steps = learning_steps_list[num]
-                best_learning_rate = model.learning_rate
-                best_learning_momentum = model.learning_momentum
-                is_hidden_layer = model.hidden_layer
-                is_max = model.max_pool
-                best_initial_weight = model.initial_weight
-                best_dropout_value = model.dropout_value
-                best_neural_weight = model.neural_weight
-                best_weight_decay1 = model.weight_decay1
-                best_weight_decay2 = model.weight_decay2
-                best_weight_decay3 = model.weight_decay3
+            # Update the best_auc if the mean auc is higher and store the hyper-parameters as optimal
+            if auc > best_auc:
+                best_auc = auc
+                best_learning_steps = learning_steps_list[l_interval]
+                best_learning_rate = learning_rate
+                best_learning_momentum = learning_momentum
+                is_hidden_layer = hidden_layer
+                is_max = max_pool
+                best_initial_weight = initial_weight
+                best_dropout_value = dropout_value
+                best_neural_weight = neural_weight
+                best_weight_decay1 = weight_decay1
+                best_weight_decay2 = weight_decay2
+                best_weight_decay3 = weight_decay3
 
-        observer.update((n + 1) * 18)  # At this point we should be 20%, 40%, 60%, 80% or 100% done
+    # Finally, train the model on the entire dataset with optimal hyper-parameters
+    model = ConvNet(num_motifs=16, motif_len=24, max_pool=is_max,
+                    hidden_layer=is_hidden_layer, training_mode=True,
+                    dropout_value=best_dropout_value, learning_rate=best_learning_rate,
+                    learning_momentum=best_learning_momentum, initial_weight=best_initial_weight,
+                    neural_weight=best_neural_weight, weight_decay1=best_weight_decay1,
+                    weight_decay2=best_weight_decay2,
+                    weight_decay3=best_weight_decay3).to(device)
+    train = parse_file_single(file_path)
+    train = load_as_tensor(train, 64)
 
+    if model.hidden_layer:
+        optimiser = torch.optim.SGD(
+            params=[model.convolution_weights, model.rectification_weights, model.neural_weights,
+                    model.neural_bias, model.hidden_weights, model.hidden_bias],
+            lr=model.learning_rate, momentum=model.learning_momentum, nesterov=True)
+    else:
+        optimiser = torch.optim.SGD(
+            params=[model.convolution_weights, model.rectification_weights, model.neural_weights,
+                    model.neural_bias],
+            lr=model.learning_rate, momentum=model.learning_momentum, nesterov=True)
+
+    learning_steps = 0
+    while learning_steps <= best_learning_steps:
+        for _, (t_data, t_target) in enumerate(train):
+            t_data = t_data.to(device)
+            t_target = t_target.to(device)
+            output = model(t_data)
+
+            if model.hidden_layer:
+                loss = F.binary_cross_entropy(input=torch.sigmoid(output), target=t_target)
+                + model.weight_decay1 * model.convolution_weights.norm()
+                + model.weight_decay2 * model.hidden_weights.norm()
+                + model.weight_decay3 * model.neural_weights.norm()
+            else:
+                loss = F.binary_cross_entropy(input=torch.sigmoid(output), target=t_target)
+                + model.weight_decay1 * model.convolution_weights.norm()
+                + model.weight_decay3 * model.neural_weights.norm()
+
+            optimiser.zero_grad()
+            loss.backward()
+            optimiser.step()
+            learning_steps += 1
+
+    # Finished with training, so return the weights
+    util.save_file(model)
+    time.sleep(3)
     observer.update(100)
-
-    print('max=', is_max)
-    print('hidden_layer=', is_hidden_layer)
-    print('best_learning_steps=', best_learning_steps)
-    print('best_Learning_rate=', best_learning_rate)
-    print('best_learning_momentum=', best_learning_momentum)
-    print('best_initial_weight=', best_initial_weight)
-    print('best_dropout_value=', best_dropout_value)
-    print('best_neural_weight=', best_neural_weight)
-    print('best_weight_decay1=', best_weight_decay1)
-    print('best_weight_decay2=', best_weight_decay2)
-    print('best_weight_decay3=', best_weight_decay3)
-
-    params = '{"learning_rate":' + str(best_learning_rate) + ', "learning_momentum":' + str(
-        best_learning_momentum) + ', "hidden_layer":' + str(is_hidden_layer).lower() + ', "max":' + str(
-        is_max).lower() + ', "initial_weight":' + str(best_initial_weight) + ', "dropout_value":' + str(
-        best_dropout_value) + ', "neural_weight":' + str(best_neural_weight) + ', "weight_decay1":' + str(
-        best_weight_decay1) + ', "weight_decay2":' + str(best_weight_decay2) + ', "weight_decay3":' + str(
-        best_weight_decay3) + '}'
-    yield 'data: {}\n\n'.format(params)
 
 
 class TrainingObserver:
