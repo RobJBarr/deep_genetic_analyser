@@ -20,7 +20,6 @@ class ConvNet(nn.Module):
                  learning_rate, learning_momentum, initial_weight,
                  neural_weight, weight_decay1, weight_decay2, weight_decay3):
         """
-
         :param num_motifs: int
         :param motif_len: int
         :param max_pool: bool
@@ -31,6 +30,9 @@ class ConvNet(nn.Module):
         :param learning_momentum: float
         :param initial_weight: float
         :param neural_weight: float
+        :param weight_decay1: float
+        :param weight_decay2: float
+        :param weight_decay3: float
         """
 
         super(ConvNet, self).__init__()
@@ -45,6 +47,8 @@ class ConvNet(nn.Module):
         self.weight_decay1 = weight_decay1
         self.weight_decay2 = weight_decay2
         self.weight_decay3 = weight_decay3
+        self.hidden_weights = None
+        self.hidden_bias = None
 
         self.convolution_weights = torch.randn(num_motifs, 4, motif_len).to(device)
         torch.nn.init.normal_(self.convolution_weights, std=self.initial_weight)
@@ -62,15 +66,15 @@ class ConvNet(nn.Module):
                 self.hidden_weights = torch.randn(2 * num_motifs, 32).to(device)
 
             self.neural_weights = torch.randn(32, 1).to(device)
-            self.weights_neural_bias = torch.randn(1).to(device)
-            self.wHiddenBias = torch.randn(32).to(device)
+            self.neural_bias = torch.randn(1).to(device)
+            self.hidden_bias = torch.randn(32).to(device)
             torch.nn.init.normal_(self.neural_weights, std=self.neural_weight)
-            torch.nn.init.normal_(self.weights_neural_bias, std=self.neural_weight)
+            torch.nn.init.normal_(self.neural_bias, std=self.neural_weight)
             torch.nn.init.normal_(self.hidden_weights, std=0.3)
-            torch.nn.init.normal_(self.wHiddenBias, std=0.3)
+            torch.nn.init.normal_(self.hidden_bias, std=0.3)
 
             self.hidden_weights.requires_grad = True
-            self.wHiddenBias.requires_grad = True
+            self.hidden_bias.requires_grad = True
 
         else:
             if max_pool:
@@ -78,12 +82,12 @@ class ConvNet(nn.Module):
             else:
                 self.neural_weights = torch.randn(2 * num_motifs, 1).to(device)
 
-            self.weights_neural_bias = torch.randn(1).to(device)
+            self.neural_bias = torch.randn(1).to(device)
             torch.nn.init.normal_(self.neural_weights, mean=0, std=self.neural_weight)
-            torch.nn.init.normal_(self.weights_neural_bias, mean=0, std=self.neural_weight)
+            torch.nn.init.normal_(self.neural_bias, mean=0, std=self.neural_weight)
 
         self.neural_weights.requires_grad = True
-        self.weights_neural_bias.requires_grad = True
+        self.neural_bias.requires_grad = True
 
     def forward_pass(self, x):
         conv = F.conv1d(input=x, weight=self.convolution_weights, bias=self.rectification_weights)
@@ -98,21 +102,73 @@ class ConvNet(nn.Module):
             if self.training_mode:
                 pool_drop = pool
                 out = pool_drop @ self.neural_weights
-                out.add_(self.weights_neural_bias)
+                out.add_(self.neural_bias)
             else:
                 out = self.dropout_value * (pool @ self.neural_weights)
-                out.add_(self.weights_neural_bias)
+                out.add_(self.neural_bias)
 
         else:
             hid = pool @ self.hidden_weights
-            hid.add_(self.wHiddenBias)
+            hid.add_(self.hidden_bias)
             hid = hid.clamp(min=0)
             if self.training_mode:
                 out = self.dropout_value * (hid @ self.neural_weights)
-                out.add_(self.weights_neural_bias)
+                out.add_(self.neural_bias)
             else:
                 out = self.dropout_value * (hid @ self.neural_weights)
-                out.add_(self.weights_neural_bias)
+                out.add_(self.neural_bias)
+
+        return out
+
+    def forward(self, x):
+        out = self.forward_pass(x)
+        return out
+
+
+class Predictor(nn.Module):
+    def __init__(self, convolution_weights, rectification_weights, hidden_layer, max_pool, neural_weights,
+                 neural_bias, hidden_weights, hidden_bias, dropout_value):
+        """
+        :param convolution_weights: np.array
+        :param rectification_weights: np.array
+        :param hidden_layer: bool
+        :param max_pool: bool
+        :param neural_weights: np.array
+        :param neural_bias: np.array
+        :param hidden_weights: np.array
+        :param hidden_bias: np.array
+        :param dropout_value: bool
+        """
+        super(Predictor, self).__init__()
+        self.convolution_weights = torch.from_numpy(convolution_weights)
+        self.rectification_weights = torch.from_numpy(rectification_weights)
+        self.hidden_layer = hidden_layer
+        self.max_pool = max_pool
+        self.neural_weights = torch.from_numpy(neural_weights)
+        self.neural_bias = torch.from_numpy(neural_bias)
+        self.hidden_weights = torch.from_numpy(hidden_weights)
+        self.hidden_bias = torch.from_numpy(hidden_bias)
+        self.dropout_value = dropout_value
+
+    def forward_pass(self, x):
+        conv = F.conv1d(input=x, weight=self.convolution_weights, bias=self.rectification_weights)
+        rect = torch.clamp(input=conv, min=0)
+        pool, _ = torch.max(input=rect, dim=2)
+
+        if not self.max_pool:
+            avg_pool = torch.mean(input=rect, dim=2)
+            pool = torch.cat(tensors=(pool, avg_pool), dim=1)
+
+        if not self.hidden_layer:
+            out = self.dropout_value * (pool @ self.neural_weights)
+            out.add_(self.neural_bias)
+
+        else:
+            hid = pool @ self.hidden_weights
+            hid.add_(self.hidden_bias)
+            hid = hid.clamp(min=0)
+            out = self.dropout_value * (hid @ self.neural_weights)
+            out.add_(self.neural_bias)
 
         return out
 
