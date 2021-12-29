@@ -29,16 +29,9 @@ def load_as_tensor(dataset, batch_size):
     return DataLoader(dataset=Initialise(dataset), batch_size=batch_size)
 
 
-def parse_file(file_path, motif_len=24):
-    """
-    Partitions a given gzip file to lists which can all then be parsed as tensors
+def parse_file_folds(file_path, motif_len=24):
+    # Partitions a given gzip file to multiple lists which can all then be parsed as tensors
 
-    :param file_path: str
-    :param motif_len: int
-    :return:
-    """
-
-    # For each sequence in the gzip file, store the padded sequence, and whether it has been shuffled
     training_set = []
 
     with gzip.open(file_path, 'rt') as data:
@@ -62,6 +55,28 @@ def parse_file(file_path, motif_len=24):
     third_valid, third_train = training_set[size + size:], training_set[0: size + size]
 
     return first_train, first_valid, second_train, second_valid, third_train, third_valid
+
+
+def parse_file_single(file_path, motif_len=24):
+    # Partitions a given gzip file to a list which can be parsed as a tensor
+
+    training_set = []
+
+    with gzip.open(file_path, 'rt') as data:
+        next(data)
+        reader = csv.reader(data, delimiter='\t')
+
+        for row in reader:
+            sequence = row[2]
+            shuffled_sequence = shuffle(row[2])
+
+            training_set.append([pad_sequence(sequence, motif_len), [1]])
+            training_set.append([pad_sequence(shuffled_sequence, motif_len), [0]])
+
+    # Shuffle the training set
+    random.shuffle(training_set)
+
+    return training_set
 
 
 def pad_sequence(sequence, motif_len, kind='DNA'):
