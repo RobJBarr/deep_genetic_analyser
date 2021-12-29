@@ -1,10 +1,8 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, request, Response
 
 from learning import TrainingObserver, train_model
 
 app = Flask(__name__)
-
-
 
 
 @app.route('/process', methods=['POST'])
