@@ -14,32 +14,35 @@ def save_file(model):
     hidden_bias = None if not hidden_layer else model.hidden_bias.detach().numpy()
 
     # Saving param values into txt and npz files
-    with open("params.txt", "w") as f:
+    with open("static/params.txt", "w") as f:
         f.write(str(hidden_layer) + "\n")
         f.write(str(max_pool) + "\n")
         f.write(str(dropout_value))
 
     if hidden_layer:
-        np.savez('weights.npz', convolution_weights=convolution_weights, rectification_weights=rectification_weights,
+        np.savez('static/weights.npz', convolution_weights=convolution_weights,
+                 rectification_weights=rectification_weights,
                  neural_weights=neural_weights, neural_bias=neural_bias, hidden_weights=hidden_weights,
                  hidden_bias=hidden_bias)
 
     else:
-        np.savez('weights.npz', convolution_weights=convolution_weights, rectification_weights=rectification_weights,
+        np.savez('static/weights.npz', convolution_weights=convolution_weights,
+                 rectification_weights=rectification_weights,
                  neural_weights=neural_weights, neural_bias=neural_bias)
 
 
+# TODO: Add file1 and file2 as arguments
 def read_file():
     hidden_weights = None
     hidden_bias = None
 
-    with open("params.txt", "r") as f:
+    with open("archive/params.txt", "r") as f:
         lines = f.read().splitlines()
         hidden_layer = True if lines[0] == 'True' else False
         max_pool = True if lines[1] == 'True' else False
         dropout_value = float(lines[2])
 
-    data = np.load('mat.npz')
+    data = np.load('archive/weights.npz')
     convolution_weights = data['convolution_weights']
     rectification_weights = data['rectification_weights']
     neural_weights = data['neural_weights']
