@@ -146,8 +146,8 @@ class Predictor(nn.Module):
         self.max_pool = max_pool
         self.neural_weights = torch.from_numpy(neural_weights)
         self.neural_bias = torch.from_numpy(neural_bias)
-        self.hidden_weights = torch.from_numpy(hidden_weights)
-        self.hidden_bias = torch.from_numpy(hidden_bias)
+        self.hidden_weights = None if not hidden_layer else torch.from_numpy(hidden_weights)
+        self.hidden_bias = None if not hidden_layer else torch.from_numpy(hidden_bias)
         self.dropout_value = dropout_value
 
     def forward_pass(self, x):
