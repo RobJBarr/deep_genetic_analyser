@@ -1,9 +1,9 @@
 import math
 import numpy as np
 import random
+import time
 import torch
 import torch.nn.functional as F
-import time
 import util
 
 from file_parser import load_as_tensor, parse_file_folds, parse_file_single
@@ -24,7 +24,7 @@ def sqrt_sampler(a, b):
 
 
 def train_model(file_path, observer):
-    observer.update(0)
+    yield 'data: {}\n\n'.format(0)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     num_epochs = 5
@@ -158,6 +158,9 @@ def train_model(file_path, observer):
                             print('AUC performance when training fold number ', fold + 1, 'learning steps = ',
                                   learning_steps_list[len(model_auc[fold]) - 1], 'is ', np.mean(auc))
 
+            percentage = (((fold + 1) * 5) + (15 * n))
+            yield 'data: {}\n\n'.format(percentage)
+
         # Get the mean auc between the three folds for each learning interval
         for l_interval in range(5):
             auc = (model_auc[0][l_interval] + model_auc[1][l_interval] + model_auc[2][l_interval]) / 3
@@ -223,8 +226,8 @@ def train_model(file_path, observer):
 
     # Finished with training, so return the weights
     util.save_file(model)
-    time.sleep(3)
-    observer.update(100)
+    time.sleep(10)
+    yield 'data: {}\n\n'.format(100)
 
 
 class TrainingObserver:
