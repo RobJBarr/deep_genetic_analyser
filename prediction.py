@@ -124,58 +124,6 @@ class ConvNet(nn.Module):
         out = self.forward_pass(x)
         return out
 
-
-class Predictor(nn.Module):
-    def __init__(self, convolution_weights, rectification_weights, hidden_layer, max_pool, neural_weights,
-                 neural_bias, hidden_weights, hidden_bias, dropout_value):
-        """
-        :param convolution_weights: np.array
-        :param rectification_weights: np.array
-        :param hidden_layer: bool
-        :param max_pool: bool
-        :param neural_weights: np.array
-        :param neural_bias: np.array
-        :param hidden_weights: np.array
-        :param hidden_bias: np.array
-        :param dropout_value: bool
-        """
-        super(Predictor, self).__init__()
-        self.convolution_weights = torch.from_numpy(convolution_weights)
-        self.rectification_weights = torch.from_numpy(rectification_weights)
-        self.hidden_layer = hidden_layer
-        self.max_pool = max_pool
-        self.neural_weights = torch.from_numpy(neural_weights)
-        self.neural_bias = torch.from_numpy(neural_bias)
-        self.hidden_weights = None if not hidden_layer else torch.from_numpy(hidden_weights)
-        self.hidden_bias = None if not hidden_layer else torch.from_numpy(hidden_bias)
-        self.dropout_value = dropout_value
-
-    def forward_pass(self, x):
-        conv = F.conv1d(input=x, weight=self.convolution_weights, bias=self.rectification_weights)
-        rect = torch.clamp(input=conv, min=0)
-        pool, _ = torch.max(input=rect, dim=2)
-
-        if not self.max_pool:
-            avg_pool = torch.mean(input=rect, dim=2)
-            pool = torch.cat(tensors=(pool, avg_pool), dim=1)
-
-        if not self.hidden_layer:
-            out = self.dropout_value * (pool @ self.neural_weights)
-            out.add_(self.neural_bias)
-
-        else:
-            hid = pool @ self.hidden_weights
-            hid.add_(self.hidden_bias)
-            hid = hid.clamp(min=0)
-            out = self.dropout_value * (hid @ self.neural_weights)
-            out.add_(self.neural_bias)
-
-        return out
-
-    def forward(self, x):
-        out = self.forward_pass(x)
-        return out
-
     def predict(self, seq):
         padded_seq = pad_sequence(sequence=seq, motif_len=24, kind='DNA')
         padded_seq = np.expand_dims(padded_seq, axis=0)
