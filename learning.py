@@ -1,14 +1,16 @@
 import math
 import numpy as np
+import pickle
 import random
 import time
 import torch
 import torch.nn.functional as F
-import util
 
 from file_parser import load_as_tensor, parse_file_folds, parse_file_single
 from prediction import ConvNet
 from sklearn import metrics
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 def log_sampler(a, b):
@@ -23,10 +25,9 @@ def sqrt_sampler(a, b):
     return y
 
 
-def train_model(file_path, observer):
+def train_model(file_path):
     yield 'data: {}\n\n'.format(0)
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     num_epochs = 5
     learning_steps_list = [4000, 8000, 12000, 16000, 20000]
     best_auc = 0
@@ -224,17 +225,10 @@ def train_model(file_path, observer):
             optimiser.step()
             learning_steps += 1
 
-    # Finished with training, so return the weights
-    util.save_file(model)
-    time.sleep(10)
+    # Finished with training, so save the model
+    with open('./static/model.pickle', 'wb') as target:
+        pickle.dump(model, target)
+        print("Saved model in model.pickle")
+
+    time.sleep(5)
     yield 'data: {}\n\n'.format(100)
-
-
-class TrainingObserver:
-    def __init__(self, task_id=0):
-        self.current_percentage = 0
-        self.task_id = task_id
-
-    def update(self, percentage):
-        self.current_percentage = percentage
-        yield "data: {}\n\n".format(percentage)
