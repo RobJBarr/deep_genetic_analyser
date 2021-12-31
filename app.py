@@ -1,6 +1,6 @@
 from flask import Flask, request, Response
 
-from learning import TrainingObserver, train_model
+from learning import train_model
 
 app = Flask(__name__)
 
@@ -15,7 +15,7 @@ def process():
 
 @app.route('/process_train/<file>')
 def process_train(file):
-    response = Response(train_model(file, TrainingObserver()), mimetype='text/event-stream')
+    response = Response(train_model(file), mimetype='text/event-stream')
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
