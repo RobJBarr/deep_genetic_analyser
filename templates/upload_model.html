@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://drive.google.com/uc?export=view&id=1b-2_6zWL_6F360SBlZrdIGrpsuWgNkKz"/>
+    <link rel="stylesheet" href="style.css">
+    <title>Upload Model</title>
+</head>
+<body>
+<div class="container">
+    <h1>Upload Model</h1>
+    <form action="/generate_map" method="post" enctype="multipart/form-data">
+        <label for="file">Model:</label>
+        <input type="file" name="file"/><br><br>
+        <label for="sequence">Sequence:</label><br>
+        <input type="text" id="sequence" name="sequence"><br>
+        <input type="submit" value="Generate Mutation Map">
+    </form>
+</div>
+
+<script>
+    var x = "{{ download }}"
+    if (x.includes("True")) {
+        document.body.innerHTML +=
+            `<a id="download" download="figure.png" href="./static/for_client/figure.png"> Click me</a>`
+        download.click()
+        download.outerHTML = ""
+    }
+</script>
+
+</body>
+</html>
