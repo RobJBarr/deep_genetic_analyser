@@ -71,7 +71,7 @@
         if (e.data.includes('100')) {
             console.log("Finished Training")
             document.body.innerHTML +=
-                `<a id="download" download="model.pickle" href="./static/model.pickle"> Click me</a>`
+                `<a id="download" download="model.pickle" href="./static/for_client/model.pickle"> Click me</a>`
             download.click()
             download.outerHTML = ""
             eventSource.close()
