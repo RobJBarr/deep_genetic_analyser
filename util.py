@@ -1,8 +1,11 @@
 import pickle
+import torch
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def read_file(file_name):
-    with open(file_name, 'rb') as target:
+def read_file(file_path):
+    with open(file_path, 'rb') as target:
         trained_model = pickle.load(target)
-    print("Loaded model from: " + file_name)
-    return trained_model
+    print("Loaded model from: " + file_path)
+    return trained_model.to(device)
