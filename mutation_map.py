@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from util import read_file
-
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
@@ -39,7 +37,7 @@ def generate_mutation_map_graph(seq, mutation_map):
     texts = annotate_heatmap(im, valfmt="{x:.1f}")
 
     fig.tight_layout()
-    plt.savefig('figure.png')
+    plt.savefig('./static/for_client/figure.png')
 
 
 def heatmap(data, row_labels, col_labels, ax=None,
@@ -140,7 +138,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
         threshold = im.norm(data.max()) / 2.
 
     # Set default alignment to center, but allow it to be
-    # overwritten by textkw.
+    # overwritten by text.
     kw = dict(horizontalalignment="center",
               verticalalignment="center")
     kw.update(textkw)
@@ -159,11 +157,3 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
             texts.append(text)
 
     return texts
-
-
-seq = "GCGCCTCACC"
-seq1 = "GCGCCGCCGGAACCCAGTTTCTCTCGAGGTCTTCGCCCCGAGCGAGGCCCGGCGGGGACTCCCGGAGGCCTCAAGGGCCCTCAGCTAGGCGCCACCACCTC"
-
-model = read_file("./static/model.pickle").to(device)
-mutation_map = get_mutation_map(seq1, model)
-generate_mutation_map_graph(seq1, mutation_map)
