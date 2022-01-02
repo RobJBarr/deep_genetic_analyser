@@ -226,9 +226,9 @@ def train_model(file_path):
             learning_steps += 1
 
     # Finished with training, so save the model
-    with open('./static/model.pickle', 'wb') as target:
+    with open('./static/for_client/model.pickle', 'wb') as target:
         pickle.dump(model, target)
-        print("Saved model in model.pickle")
+        print("Saved model")
 
     time.sleep(5)
     yield 'data: {}\n\n'.format(100)
