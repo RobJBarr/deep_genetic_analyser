@@ -2,8 +2,7 @@ import React from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import FileUpload from "./components/FileUpload";
-
+import Main from "./components/Main"
 function App() {
   return (
     <div className="container" style={{ width: "100%" }}>
@@ -11,7 +10,9 @@ function App() {
         <div class="header">Deep Genetic Analyser</div>
       </div>
 
-      <FileUpload />
+      <div className="App">
+        <Main />
+      </div>
     </div>
   );
 }

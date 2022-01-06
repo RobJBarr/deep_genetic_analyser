@@ -229,6 +229,8 @@ def train_model(file_path):
     with open('./static/for_client/model.pickle', 'wb') as target:
         pickle.dump(model, target)
         print("Saved model")
+    
 
     time.sleep(5)
     yield 'data: {}\n\n'.format(100)
+    return list(pickle.dumps(model))

@@ -1,11 +1,14 @@
 import http from "../http-common";
 
-const upload = (filename) => {
+const uploadSequence = (filename) => {
     var url = "http://localhost:5000/process_train/" + filename;
-
-    console.log(url);
     return new EventSource(url);
     
+};
+
+const uploadPickle = (filename, sequence) => {
+  var url = "http://localhost:5000/generate_map/" + filename + "/" + sequence;
+  return new EventSource(url);
 };
 
 const getFiles = () => {
@@ -13,6 +16,7 @@ const getFiles = () => {
 };
 
 export default {
-  upload,
+  uploadSequence,
+  uploadPickle,
   getFiles,
 };

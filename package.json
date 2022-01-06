@@ -4,5 +4,8 @@
     "scripts": {
         "build": "cd app/ && npm install && npm run build",
         "start": "npm start --prefix app"
+    },
+    "devDependencies": {
+        "reload": "^3.2.0"
     }
-  }
+}
