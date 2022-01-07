@@ -2,21 +2,35 @@ import os
 import time
 
 from flask import Flask, render_template, request, Response, send_file
+from flask_cors import CORS, cross_origin
 from learning import train_model
 from mutation_map import get_mutation_map, generate_mutation_map_graph
 from util import read_file
 
 app = Flask(__name__)
+cors = CORS(app)
 
 
-@app.route('/process', methods=['POST'])
-def process():
+@app.route('/process_sequence', methods=['POST'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def process_sequence():
     if request.method == 'POST':
+        print(request.files)
         f = request.files['file']
-        f.save(os.path.join('./static/for_server', f.filename))
+        f.save(os.path.join('./', f.filename))
+        return "success"
 
+@app.route('/process_pickle', methods=['POST'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def process_pickle():
+    if request.method == 'POST':
+        print(request.files)
+        f = request.files['file']
+        f.save(os.path.join('./', f.filename))
+        return "success"
 
 @app.route('/process_train/<file>')
+
 def process_train(file):
     response = Response(train_model(file), mimetype='application/octet-stream')
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -29,19 +43,13 @@ def upload_model():
 
 
 @app.route('/generate_map/<file>/<sequence>', methods=['POST','GET'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def generate_map(file, sequence):
-    print("here")
-    time.sleep(3)
-
     model = read_file(file)
     mutation_map = get_mutation_map(sequence, model)
-    generate_mutation_map_graph(sequence, mutation_map)
-    time.sleep(3)
-    response = Response(mutation_map, mimetype='image/png')
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    print("here2")
+    base64_data = generate_mutation_map_graph(sequence, mutation_map)
+    response = Response(base64_data)
     return response
-
 
 if __name__ == '__main__':
     app.run(port=3000)

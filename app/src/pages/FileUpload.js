@@ -6,30 +6,32 @@ import { Link } from "react-router-dom";
 
 
 const FileUpload = () => {
-    const [selectedFiles, setSelectedFiles] = useState(undefined);
+    const [selectedFiles, setSelectedFiles] = useState([]);
     const [currentFile, setCurrentFile] = useState(undefined);
     const [message, setMessage] = useState("");
     const [checkedValue, setCheckedValue] = useState(undefined);
+    const [checkedContent, setCheckedContents] = useState(undefined)
     const [fileInfos, setFileInfos] = useState([]);
     const uploadedFiles = [];
     const [optimalParams, setOptimalParams] = useState(undefined);
     const selectFile = (event) => {
-        setSelectedFiles(event.target.files);
+        setSelectedFiles(oldArray => [...oldArray, event.target.files[0]])
         for (const file of event.target.files) {
-            if (uploadedFiles.indexOf(file.name) === -1)
-            uploadedFiles.push(file.name);
+                uploadedFiles.push(file);
         }
         refreshRadios();
     };
 
     const beginTraining = () => (event) => {
+        console.log(selectedFiles)
+        console.log(checkedContent)
         if (checkedValue != null){
             var trainingButton = document.querySelector(".training-button");
             trainingButton.textContent = "Training...";
             trainingButton.disabled = true;
             var progressbar = document.getElementById("progress-bar")
             progressbar.style.display = "block";
-            var eventSource = UploadService.uploadSequence(checkedValue);
+            var eventSource = UploadService.getModel(checkedValue, checkedContent);
             eventSource.onmessage = function (e) {
                 if (e.data.includes('100')) {
                     console.log("Finished Training")
@@ -74,12 +76,21 @@ const FileUpload = () => {
             trainingButton.style = {"display":"none"};
             trainingButton.classList.remove("animation");
         } else {
-            console.log("asdfa");
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = false;
             })
             trainingButton.classList.add("animation");
             setCheckedValue(event.target.value);
+            console.log(event.target.value)
+            console.log("asdfasdf")
+            for (var i = 0; i < selectedFiles.length; i++){
+                console.log("adf")
+                console.log(selectedFiles[i].name)
+                if (selectedFiles[i].name === event.target.value){
+                    
+                    setCheckedContents(selectedFiles[i])
+                }
+            }
         }
     }
     
@@ -92,10 +103,10 @@ const FileUpload = () => {
             var label = document.createElement('label');
             radio.type = 'radio';
             radio.name = 'files';
-            radio.value = uploadedFiles[i];
+            radio.value = uploadedFiles[i].name;
             radio.onchange = uncheck(radio.value)
-            label.setAttribute("for", uploadedFiles[i]);
-            label.innerHTML = uploadedFiles[i];
+            label.setAttribute("for", uploadedFiles[i].name);
+            label.innerHTML = uploadedFiles[i].name;
           
             elementsToInsert.push({ radio: radio , label: label });
           }

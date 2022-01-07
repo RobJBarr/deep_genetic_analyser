@@ -2,7 +2,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
+import io
+import base64
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
@@ -35,10 +36,15 @@ def generate_mutation_map_graph(seq, mutation_map):
     im, cbar = heatmap(data=mutation_map, row_labels=bases, col_labels=seq, ax=ax,
                        cmap="RdBu_r", cbarlabel="Change in score from Mutation")
     texts = annotate_heatmap(im, valfmt="{x:.1f}")
-
+    plt.show
     fig.tight_layout()
-    plt.savefig('./static/for_client/figure.png')
-
+    
+    my_stringIObytes = io.BytesIO()
+    plt.savefig(my_stringIObytes, format='png')
+    my_stringIObytes.seek(0)
+    my_base64_pngData = base64.b64encode(my_stringIObytes.read())
+    return my_base64_pngData
+    
 
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):

@@ -1,21 +1,68 @@
 import http from "../http-common";
+import axios from "axios";
 
-const uploadSequence = (filename) => {
-    var url = "http://localhost:5000/process_train/" + filename;
-    return new EventSource(url);
+
+async function getModel(filename, data) {
+    await uploadSequence(filename, data).then(() => {
+      var url = "http://localhost:5000/process_train/" + filename;
+      return new EventSource(url);
+    })
     
 };
 
-const uploadPickle = (filename, sequence) => {
+async function uploadSequence(data){
+  let file = data
+  console.log(data)
+  const formData = new FormData();
+  formData.append("file", file);
+  const headers = {
+    "Access-Control-Allow-Origin": "*"
+  }
+  
+  axios
+    .post("http://localhost:5000/process_sequence", formData, {
+      headers: headers
+    })
+    .then(res => console.log(res))
+    .catch(err => console.warn(err));
+}
+
+async function uploadPickle(data){
+    let file = data
+    const formData = new FormData();
+  
+    formData.append("file", file);
+  
+    axios
+      .post("http://localhost:5000/process_pickle", formData)
+      .then(res => console.log(res))
+      .catch(err => console.warn(err));
+      
+}
+
+async function getMutationMap(filename, sequence, data){
+  console.log(data)
+  await uploadPickle(data)
   var url = "http://localhost:5000/generate_map/" + filename + "/" + sequence;
-  return new EventSource(url);
+
+  return await axios.get(url).then(response => {
+    if (response) {
+      return response.data
+    }
+    return Promise.reject('An unknown error occurred');
+  });
+  
 };
+
+
 
 const getFiles = () => {
   return http.get("http://localhost:8080/files", {crossDomain: true});
 };
 
 export default {
+  getModel,
+  getMutationMap,
   uploadSequence,
   uploadPickle,
   getFiles,
