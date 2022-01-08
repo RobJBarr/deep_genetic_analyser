@@ -27,9 +27,9 @@
 
 >flask run
 
-7. Switch to a new terminal
+7. Switch to a new terminal and enter the following commands
+>cd deep_genetic_analyser/app
 
-8. Run on react
 > npm install
 
 > npm start
