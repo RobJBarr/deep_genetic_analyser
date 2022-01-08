@@ -16,7 +16,6 @@ def process_sequence():
     if request.method == 'POST':
         f = request.files['file']
         f.save(os.path.join('./', f.filename))
-        time.sleep(3)
         return "success"
 
 @app.route('/process_pickle', methods = ['POST'])
@@ -30,6 +29,7 @@ def process_pickle():
 @app.route('/process_train/<file>', methods = ['GET'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def process_train(file):
+    time.sleep(5)
     response = Response(train_model(file), mimetype='text/event-stream')
     return response
 
