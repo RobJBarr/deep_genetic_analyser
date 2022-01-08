@@ -1,6 +1,5 @@
 import os
 import time
-
 from flask import Flask, render_template, request, Response, send_file
 from flask_cors import CORS, cross_origin
 from learning import train_model
@@ -17,6 +16,7 @@ def process_sequence():
     if request.method == 'POST':
         f = request.files['file']
         f.save(os.path.join('./', f.filename))
+        time.sleep(3)
         return "success"
 
 @app.route('/process_pickle', methods = ['POST'])
