@@ -12,7 +12,7 @@ Implementation of ConvNet is implemented from the description of ConvNet in Deep
 
 """
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 
 class ConvNet(nn.Module):

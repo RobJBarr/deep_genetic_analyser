@@ -11,29 +11,26 @@ app = Flask(__name__)
 cors = CORS(app)
 
 
-@app.route('/process_sequence', methods=['POST'])
+@app.route('/process_sequence', methods = ['POST'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def process_sequence():
     if request.method == 'POST':
-        print(request.files)
         f = request.files['file']
         f.save(os.path.join('./', f.filename))
         return "success"
 
-@app.route('/process_pickle', methods=['POST'])
+@app.route('/process_pickle', methods = ['POST'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def process_pickle():
     if request.method == 'POST':
-        print(request.files)
         f = request.files['file']
         f.save(os.path.join('./', f.filename))
         return "success"
 
-@app.route('/process_train/<file>')
-
+@app.route('/process_train/<file>', methods = ['GET'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def process_train(file):
-    response = Response(train_model(file), mimetype='application/octet-stream')
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response = Response(train_model(file), mimetype='text/event-stream')
     return response
 
 
@@ -46,6 +43,7 @@ def upload_model():
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def generate_map(file, sequence):
     model = read_file(file)
+    os.remove(file)
     mutation_map = get_mutation_map(sequence, model)
     base64_data = generate_mutation_map_graph(sequence, mutation_map)
     response = Response(base64_data)

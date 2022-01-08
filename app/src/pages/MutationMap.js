@@ -12,12 +12,10 @@ const MutationMap = () => {
             setSelectedFile(file.name);
             setSelectedContents(file)
         }
-        console.log(selectedFile)
     };
 
     const selectSequence = (event) => {
         setSequence(event.target.value);
-        console.log(sequence)
     }
 
     const generateMap = () => {

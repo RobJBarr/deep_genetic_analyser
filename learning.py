@@ -5,12 +5,12 @@ import random
 import time
 import torch
 import torch.nn.functional as F
-
+import os
 from file_parser import load_as_tensor, parse_file_folds, parse_file_single
 from prediction import ConvNet
 from sklearn import metrics
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 
 def log_sampler(a, b):
@@ -47,7 +47,7 @@ def train_model(file_path):
 
     # Split the data into 3 different folds from the file_path
     first_train, first_valid, second_train, second_valid, third_train, third_valid = parse_file_folds(file_path)
-
+    
     # Load the data as tensors
     first_train = load_as_tensor(first_train, 64)
     second_train = load_as_tensor(second_train, 64)
@@ -159,9 +159,8 @@ def train_model(file_path):
                             print('AUC performance when training fold number ', fold + 1, 'learning steps = ',
                                   learning_steps_list[len(model_auc[fold]) - 1], 'is ', np.mean(auc))
 
-            percentage = (((fold + 1) * 5) + (15 * n))
+            percentage = (((fold + 1) * 20/3.0) + (20 * n))
             yield 'data: {}\n\n'.format(percentage)
-
         # Get the mean auc between the three folds for each learning interval
         for l_interval in range(5):
             auc = (model_auc[0][l_interval] + model_auc[1][l_interval] + model_auc[2][l_interval]) / 3
@@ -191,6 +190,8 @@ def train_model(file_path):
                     weight_decay3=best_weight_decay3).to(device)
     train = parse_file_single(file_path)
     train = load_as_tensor(train, 64)
+
+    os.remove(file_path)
 
     if model.hidden_layer:
         optimiser = torch.optim.SGD(
@@ -224,13 +225,11 @@ def train_model(file_path):
             loss.backward()
             optimiser.step()
             learning_steps += 1
-
-    # Finished with training, so save the model
-    with open('./static/for_client/model.pickle', 'wb') as target:
-        pickle.dump(model, target)
-        print("Saved model")
     
 
     time.sleep(5)
+    
     yield 'data: {}\n\n'.format(100)
-    return list(pickle.dumps(model))
+    yield 'data: {}\n\n'.format(list(pickle.dumps(model)))
+
+    return "success"

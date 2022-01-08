@@ -2,29 +2,38 @@ import http from "../http-common";
 import axios from "axios";
 
 
-async function getModel(filename, data) {
-    await uploadSequence(filename, data).then(() => {
-      var url = "http://localhost:5000/process_train/" + filename;
-      return new EventSource(url);
-    })
+const getModel = (filename, data) => {
+    var isWaiting = true
+    uploadSequence(data)
+        .then(response => {console.log(response);
+          isWaiting = false
+        })
+    if (isWaiting == true){
+        console.log("waiting")
+    }
+    
+    var url = "http://localhost:5000/process_train/" + filename;
+    
+    return url;
+    
+    
     
 };
 
+
+
 async function uploadSequence(data){
   let file = data
-  console.log(data)
   const formData = new FormData();
   formData.append("file", file);
   const headers = {
     "Access-Control-Allow-Origin": "*"
   }
   
-  axios
+  return axios
     .post("http://localhost:5000/process_sequence", formData, {
       headers: headers
     })
-    .then(res => console.log(res))
-    .catch(err => console.warn(err));
 }
 
 async function uploadPickle(data){
@@ -41,8 +50,7 @@ async function uploadPickle(data){
 }
 
 async function getMutationMap(filename, sequence, data){
-  console.log(data)
-  await uploadPickle(data)
+  await uploadPickle(data).then(resp => {console.log(resp)})
   var url = "http://localhost:5000/generate_map/" + filename + "/" + sequence;
 
   return await axios.get(url).then(response => {
