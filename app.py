@@ -1,6 +1,5 @@
 import os
 import time
-
 from flask import Flask, render_template, request, Response, send_file
 from flask_cors import CORS, cross_origin
 from learning import train_model

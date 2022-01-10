@@ -1,4 +1,4 @@
-# How to run locally
+# How to run app locally
 1. Change to directory
 > cd deep_genetic_analyser 
 
@@ -12,7 +12,7 @@
 >. venv/bin/activate
 
 4. Install Flask within activated environment
->pip3 install Flask
+>pip3 install flask
 
 5. Install Requirements
 >pip3 install -r requirements.txt
@@ -26,3 +26,10 @@
 >export FLASK_APP=app
 
 >flask run
+
+7. Switch to a new terminal and enter the following commands
+>cd deep_genetic_analyser/app
+
+> npm install
+
+> npm start
