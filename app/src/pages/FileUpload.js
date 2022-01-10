@@ -42,7 +42,7 @@ const FileUpload = () => {
             trainingButton.disabled = true;
             var progressbar = document.getElementById("progress-bar")
             progressbar.style.display = "block";
-            var url = UploadService.getModel(checkedValue, checkedContent);
+            UploadService.getModel(checkedValue, checkedContent).then((url) => {
             var eventSource = new EventSource(url)
                 eventSource.onerror = function() {
                     eventSource.close()
@@ -50,17 +50,17 @@ const FileUpload = () => {
             var penultimate = false
             eventSource.onmessage = function(e){
                 if (penultimate) {
-                    sleep(1000).then(() => {console.log(e.data)
+                    sleep(1000).then(() => {
                     var array = JSON.parse(e.data)
-                    console.log(array)
                     let bytes_array = new Uint8Array(array); //<--- add this
                     let mime_type = '{{application/octet-stream}}';
                     var blob = new Blob([bytes_array], { type: mime_type })
-                    //trainingButton.disabled = false;
+                    trainingButton.disabled = false;
                     var dlink = document.createElement('a');
-                    dlink.download = 'pickle.pickle';
+                    dlink.download = 'trained_model.pickle';
                     dlink.href = window.URL.createObjectURL(blob);
                     dlink.onclick = function (e) {
+                        console.log("Downloading")
                         // revokeObjectURL needs a delay to work properly.
                         var that = this;
                         setTimeout(function () {
@@ -74,6 +74,8 @@ const FileUpload = () => {
                     
                     progressbar.value = '0';
                     progressbar.innerText = "";
+                    trainingButton.textContent = "Train";
+                    progressbar.style.display = "none";
                 } else {
                     if (e.data.includes('100')){
                         penultimate = true
@@ -82,7 +84,8 @@ const FileUpload = () => {
                     progressbar.innerText = e.data + "%";
                 }
             }
-            progressbar.classList.add("color");}
+            
+            progressbar.classList.add("color")});}
         
     }
     
@@ -91,7 +94,6 @@ const FileUpload = () => {
         
         var nullButtons = document.querySelectorAll('input[value="null"]');
         var trainingButton = document.querySelector(".training-button");
-        console.log(event.target.value);
             nullButtons.forEach(function (thisButton) {
                 thisButton.checked = false;
             })

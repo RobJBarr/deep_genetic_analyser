@@ -159,7 +159,7 @@ def train_model(file_path):
                             print('AUC performance when training fold number ', fold + 1, 'learning steps = ',
                                   learning_steps_list[len(model_auc[fold]) - 1], 'is ', np.mean(auc))
 
-            percentage = (((fold + 1) * 20/3.0) + (20 * n))
+            percentage = (((fold + 1) * 5) + (15 * n))
             yield 'data: {}\n\n'.format(percentage)
         # Get the mean auc between the three folds for each learning interval
         for l_interval in range(5):
@@ -206,6 +206,9 @@ def train_model(file_path):
 
     learning_steps = 0
     while learning_steps <= best_learning_steps:
+        if (learning_steps % 50 == 0):
+            percentage = 75 + (learning_steps/best_learning_steps * 25)
+            yield 'data: {}\n\n'.format(percentage)
         for _, (t_data, t_target) in enumerate(train):
             t_data = t_data.to(device)
             t_target = t_target.to(device)

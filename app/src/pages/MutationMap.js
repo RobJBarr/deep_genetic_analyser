@@ -25,7 +25,6 @@ const MutationMap = () => {
             a.value = "Click here"
             a.type = "image/png"
             a.href = 'data:image/png;base64,' + image;
-            console.log(a.href)
             a.click();})
          //Downloaded file
     }

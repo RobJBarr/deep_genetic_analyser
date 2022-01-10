@@ -2,22 +2,16 @@ import http from "../http-common";
 import axios from "axios";
 
 
-const getModel = (filename, data) => {
+async function getModel(filename, data){
     var isWaiting = true
-    uploadSequence(data)
-        .then(response => {console.log(response);
+    return await uploadSequence(data)
+        .then(response => {
           isWaiting = false
-        })
-    if (isWaiting == true){
-        console.log("waiting")
-    }
-    
-    var url = "http://localhost:5000/process_train/" + filename;
-    
-    return url;
-    
-    
-    
+          if (response) {
+            var url = "http://localhost:5000/process_train/" + filename;
+            return url; 
+          }
+        })       
 };
 
 
